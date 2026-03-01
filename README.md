@@ -25,6 +25,21 @@ This repository is my personal implementation and benchmark runner for **CodeWik
 - `mistralai/Mistral-7B-Instruct-v0.3`
 - `Qwen/Qwen2.5-Coder-7B-Instruct`
 
+## Token Settings Per Model
+
+The table below reflects the current generation settings in `configs/default.yaml`.
+
+| Model Alias | max_input_tokens | max_new_tokens | temperature | top_p | timeout_sec |
+|---|---:|---:|---:|---:|---:|
+| CodeLlama | default backend limit | 768 | 0.1 | 0.9 | 180 |
+| DeepSeekCoder | 3072 | 768 | 0.1 | 0.9 | 180 |
+| Mistral | default backend limit | 768 | 0.1 | 0.9 | 180 |
+| Qwen | default backend limit | 768 | 0.1 | 0.9 | 180 |
+
+Notes:
+- `max_input_tokens` is explicitly set for `DeepSeekCoder`; other models use backend defaults.
+- For `transformers`, the default input limit in this project is `3072` tokens unless overridden per model.
+
 ## Current Results (train split, 22 repos)
 
 > QA is intentionally omitted in this table as requested.
@@ -79,6 +94,21 @@ outputs/
   results/
 ```
 
+## Prompt Design (Important)
+
+Prompt templates are centralized in `codewiki_hpc/prompts.py`:
+
+- Stage A (`make_stage_a_user_prompt`): per-file role/responsibility summary
+- Stage B (`make_stage_b_user_prompt`): per-module synthesis from Stage A summaries
+- Stage C (`make_stage_c_user_prompt`): final holistic repository documentation
+
+In `codewiki_hpc/summarizer.py`, Stage C also includes:
+
+- anti-copy filtering for noisy HTML/docs link blocks
+- quality checks for final markdown structure
+- retry with reduced prompt budget
+- deterministic fallback document when generation repeatedly fails
+
 ## End-to-End Run Guide (HPC)
 
 ### 0) Environment
@@ -126,6 +156,51 @@ python -m codewiki_hpc.run \
   --offline \
   --model_root /work/$USER/models \
   --output_dir outputs \
+  --resume
+```
+
+## Command Cookbook
+
+### Run one model only
+
+```bash
+python -m codewiki_hpc.run \
+  --config configs/default.yaml \
+  --models "Qwen" \
+  --split train \
+  --max_repos 22 \
+  --backend transformers \
+  --offline \
+  --model_root /work/$USER/models \
+  --output_dir outputs \
+  --resume
+```
+
+### Regenerate only failed/unfinished rows
+
+```bash
+python -m codewiki_hpc.run \
+  --config configs/default.yaml \
+  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
+  --split train \
+  --max_repos 22 \
+  --backend transformers \
+  --offline \
+  --model_root /work/$USER/models \
+  --output_dir outputs \
+  --resume
+```
+
+### Evaluation-only pass on existing docs
+
+```bash
+python -m codewiki_hpc.run \
+  --config configs/default.yaml \
+  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
+  --split train \
+  --max_repos 22 \
+  --output_dir outputs \
+  --eval_only \
   --resume
 ```
 
