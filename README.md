@@ -385,3 +385,34 @@ If you use CodeWiki in your research, please cite:
 ## License
 
 This project is licensed under the MIT License.
+
+---
+
+## HPC Network Note (Gateway vs GPU)
+
+On this cluster, GPU nodes may not have outbound internet. Use this workflow:
+
+1. Prefetch repositories on gateway/login node (internet available):
+
+```bash
+cd /home/22011107/TA/NLPCODEWIKI/CodeWiki
+conda activate codewiki_py312
+./scripts/prefetch_gateway.sh
+```
+
+2. Run generation on GPU in offline mode:
+
+```bash
+cd /home/22011107/TA/NLPCODEWIKI/CodeWiki
+MODELS="CodeLlama,DeepSeekCoder,Mistral,Qwen" \
+BACKEND=transformers \
+MAX_REPOS=22 \
+MODEL_ROOT="/work/$USER/models" \
+OFFLINE=1 \
+sbatch scripts/slurm_array_generate.sh
+```
+
+Notes:
+- `scripts/slurm_array_generate.sh` defaults to `OFFLINE=1`.
+- `scripts/prefetch_gateway.sh` fills `outputs/cache/repos/...` so GPU runs do not clone from GitHub.
+- If some rows previously failed, rerun with `--resume` to retry only failed repos.

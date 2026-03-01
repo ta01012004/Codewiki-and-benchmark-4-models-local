@@ -1,0 +1,118 @@
+backend: vllm
+output_dir: outputs
+
+runtime:
+  seed: 42
+  deterministic: false
+  resume: true
+  gpus: 1
+  clone_timeout_sec: 900
+  offline: false
+  model_root: null
+
+dataset:
+  name: anhnh2002/codewikibench
+  split: train
+  max_repos: 22
+
+repo:
+  max_file_size_bytes: 600000
+  max_files: 25000
+  max_docs_chars: 40000
+  skip_dirs:
+    - .git
+    - node_modules
+    - dist
+    - build
+    - vendor
+    - __pycache__
+    - .venv
+    - venv
+    - target
+    - out
+    - coverage
+  skip_extensions:
+    - .png
+    - .jpg
+    - .jpeg
+    - .gif
+    - .pdf
+    - .zip
+    - .tar
+    - .gz
+    - .bz2
+    - .xz
+    - .jar
+    - .so
+    - .dll
+    - .dylib
+    - .pt
+    - .bin
+    - .onnx
+
+summarization:
+  top_k_files: 36
+  max_file_chars: 14000
+  timeout_sec: 180
+
+evaluation:
+  sentence_transformer_model: sentence-transformers/all-MiniLM-L6-v2
+  enable_bertscore: false
+
+models:
+  CodeLlama:
+    model_name: meta-llama/CodeLlama-7b-Instruct-hf
+    local_dir_name: CodeLlama-7b-Instruct-hf
+    output_name: CodeLlama-7b-Instruct-hf
+    max_new_tokens: 768
+    temperature: 0.1
+    top_p: 0.9
+    timeout_sec: 180
+    tensor_parallel_size: 1
+    gpu_memory_utilization: 0.92
+    max_model_len: 8192
+    torch_dtype: bfloat16
+    device_map: auto
+
+  DeepSeekCoder:
+    model_name: deepseek-ai/deepseek-coder-6.7b-instruct
+    local_dir_name: deepseek-coder-6.7b-instruct
+    output_name: deepseek-coder-6.7b-instruct
+    max_new_tokens: 768
+    max_input_tokens: 3072
+    temperature: 0.1
+    top_p: 0.9
+    timeout_sec: 180
+    tensor_parallel_size: 1
+    gpu_memory_utilization: 0.92
+    max_model_len: 8192
+    torch_dtype: bfloat16
+    device_map: auto
+
+  Mistral:
+    model_name: mistralai/Mistral-7B-Instruct-v0.3
+    local_dir_name: Mistral-7B-Instruct-v0.3
+    output_name: Mistral-7B-Instruct-v0.3
+    max_new_tokens: 768
+    temperature: 0.1
+    top_p: 0.9
+    timeout_sec: 180
+    tensor_parallel_size: 1
+    gpu_memory_utilization: 0.92
+    max_model_len: 8192
+    torch_dtype: bfloat16
+    device_map: auto
+
+  Qwen:
+    model_name: Qwen/Qwen2.5-Coder-7B-Instruct
+    local_dir_name: Qwen2.5-Coder-7B-Instruct
+    output_name: Qwen2.5-Coder-7B-Instruct
+    max_new_tokens: 768
+    temperature: 0.1
+    top_p: 0.9
+    timeout_sec: 180
+    tensor_parallel_size: 1
+    gpu_memory_utilization: 0.92
+    max_model_len: 8192
+    torch_dtype: bfloat16
+    device_map: auto
