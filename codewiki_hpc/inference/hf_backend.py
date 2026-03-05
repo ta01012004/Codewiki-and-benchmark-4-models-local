@@ -114,7 +114,12 @@ class HFTransformersBackend(InferenceBackend):
             max_length=max_len,
         )
 
-    def _generate_once(self, inputs: dict[str, torch.Tensor], params: GenerationParams, max_tokens: int) -> str:
+    def _generate_once(
+        self,
+        inputs: dict[str, torch.Tensor],
+        params: GenerationParams,
+        max_tokens: int,
+    ) -> tuple[str, int]:
         model_device = getattr(self.model, "device", None)
         if model_device is not None and model_device.type != "meta":
             inputs = {k: v.to(model_device) for k, v in inputs.items()}
@@ -131,7 +136,9 @@ class HFTransformersBackend(InferenceBackend):
             )
 
         gen_tokens = outputs[0][inputs["input_ids"].shape[1] :]
-        return self.tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+        completion_tokens = int(gen_tokens.shape[-1])
+        text = self.tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
+        return text, completion_tokens
 
     def generate(self, system_prompt: str, user_prompt: str, params: GenerationParams) -> str:
         max_tokens = int(params.max_new_tokens)
@@ -147,7 +154,9 @@ class HFTransformersBackend(InferenceBackend):
                 )
                 with ThreadPoolExecutor(max_workers=1) as ex:
                     fut = ex.submit(self._generate_once, inputs, params, max_tokens)
-                    return fut.result(timeout=params.timeout_sec)
+                    text, completion_tokens = fut.result(timeout=params.timeout_sec)
+                self._record_usage(prompt_tokens=seq_len, completion_tokens=completion_tokens)
+                return text
             except FuturesTimeout as e:
                 raise TimeoutError(
                     f"Generation timed out for model={self.model_name} timeout={params.timeout_sec}s"

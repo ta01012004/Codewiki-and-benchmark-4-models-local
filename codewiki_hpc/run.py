@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import os
 import random
 import traceback
@@ -10,9 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from .config import apply_cli_overrides, load_config, parse_model_list
-from .evaluation.metrics import rouge_l_score
+from .evaluation import (
+    aggregate_model_matrix,
+    infer_primary_language,
+    write_model_matrix_csv,
+    write_repo_matrix_csv,
+)
 from .evaluation.qa_eval import QAEvaluator
-from .evaluation.rubric_eval import evaluate_rubrics
+from .evaluation.rubric_eval import evaluate_rubrics, evaluate_rubrics_matrix
 from .inference import create_backend
 from .repo_manager import RepoManager
 from .summarizer import RepoSummarizer
@@ -24,11 +28,21 @@ RESULT_COLUMNS = [
     "repo_name",
     "commit_id",
     "model_name",
+    "primary_language",
     "doc_path",
     "generation_time_sec",
-    "rougeL",
     "qa_score",
     "coverage_score",
+    "hierarchy_alignment",
+    "leaf_coverage",
+    "structural_fidelity",
+    "factual_grounding",
+    "actionability",
+    "coherence",
+    "required_sections_coverage",
+    "key_term_coverage",
+    "leaf_items_hit",
+    "leaf_items_total",
     "notes",
 ]
 
@@ -130,17 +144,6 @@ def _dedupe_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             order.append(key)
         latest_by_key[key] = row
     return [latest_by_key[k] for k in order]
-
-
-def _as_text(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value
-    try:
-        return json.dumps(value, ensure_ascii=False)
-    except Exception:
-        return str(value)
 
 
 def _model_csv_name(model_cfg: dict[str, Any], fallback_key: str) -> str:
@@ -250,11 +253,21 @@ def main() -> None:
                         "repo_name": sample.repo_name,
                         "commit_id": sample.commit_id,
                         "model_name": model_name,
+                        "primary_language": infer_primary_language(sample.docs_tree, sample.structured_docs),
                         "doc_path": "",
                         "generation_time_sec": 0.0,
-                        "rougeL": 0.0,
                         "qa_score": 0.0,
                         "coverage_score": 0.0,
+                        "hierarchy_alignment": 0.0,
+                        "leaf_coverage": 0.0,
+                        "structural_fidelity": 0.0,
+                        "factual_grounding": 0.0,
+                        "actionability": 0.0,
+                        "coherence": 0.0,
+                        "required_sections_coverage": 0.0,
+                        "key_term_coverage": 0.0,
+                        "leaf_items_hit": 0,
+                        "leaf_items_total": 0,
                         "notes": f"backend_init_failed: {e}",
                     }
                     _upsert_row(model_rows, row)
@@ -272,11 +285,21 @@ def main() -> None:
                 "repo_name": sample.repo_name,
                 "commit_id": sample.commit_id,
                 "model_name": model_name,
+                "primary_language": infer_primary_language(sample.docs_tree, sample.structured_docs),
                 "doc_path": "",
                 "generation_time_sec": 0.0,
-                "rougeL": 0.0,
                 "qa_score": 0.0,
                 "coverage_score": 0.0,
+                "hierarchy_alignment": 0.0,
+                "leaf_coverage": 0.0,
+                "structural_fidelity": 0.0,
+                "factual_grounding": 0.0,
+                "actionability": 0.0,
+                "coherence": 0.0,
+                "required_sections_coverage": 0.0,
+                "key_term_coverage": 0.0,
+                "leaf_items_hit": 0,
+                "leaf_items_total": 0,
                 "notes": "",
             }
 
@@ -310,12 +333,6 @@ def main() -> None:
                 if not doc_text:
                     notes.append("doc_missing_or_empty")
 
-                reference_text = _as_text(sample.structured_docs)
-                if reference_text:
-                    row["rougeL"] = round(rouge_l_score(doc_text, reference_text), 6)
-                else:
-                    notes.append("structured_docs_missing_for_rouge")
-
                 qa_result = qa_evaluator.evaluate(doc_text, sample.qa_pairs)
                 row["qa_score"] = round(float(qa_result.score), 6)
                 if not sample.qa_pairs:
@@ -329,6 +346,24 @@ def main() -> None:
                 )
                 row["coverage_score"] = round(float(coverage_score), 6)
                 notes.append(coverage_notes)
+
+                matrix_result = evaluate_rubrics_matrix(
+                    doc_text=doc_text,
+                    rubrics=sample.rubrics,
+                    docs_tree=sample.docs_tree,
+                    structured_docs=sample.structured_docs,
+                )
+                row["hierarchy_alignment"] = round(float(matrix_result.hierarchy_alignment), 6)
+                row["leaf_coverage"] = round(float(matrix_result.leaf_coverage), 6)
+                row["structural_fidelity"] = round(float(matrix_result.structural_fidelity), 6)
+                row["factual_grounding"] = round(float(matrix_result.factual_grounding), 6)
+                row["actionability"] = round(float(matrix_result.actionability), 6)
+                row["coherence"] = round(float(matrix_result.coherence), 6)
+                row["required_sections_coverage"] = round(float(matrix_result.required_sections_coverage), 6)
+                row["key_term_coverage"] = round(float(matrix_result.key_term_coverage), 6)
+                row["leaf_items_hit"] = int(matrix_result.leaf_items_hit)
+                row["leaf_items_total"] = int(matrix_result.leaf_items_total)
+                notes.append(f"matrix: {matrix_result.notes}")
 
             except Exception as e:
                 notes.append(f"pipeline_failure: {type(e).__name__}: {e}")
@@ -352,7 +387,6 @@ def main() -> None:
                         "repo": sample.repo_name,
                         "commit": sample.commit_id,
                         "model": model_key,
-                        "rougeL": row["rougeL"],
                         "qa_score": row["qa_score"],
                         "coverage_score": row["coverage_score"],
                     },
@@ -367,6 +401,15 @@ def main() -> None:
     all_csv = output_dir / "results" / "cwbench_all_models.csv"
     _write_results(all_csv, all_rows)
     logger.info(f"Wrote aggregate results to {all_csv}")
+
+    repo_matrix_csv = output_dir / "results" / "cwbench_matrix_repo.csv"
+    write_repo_matrix_csv(repo_matrix_csv, all_rows)
+    logger.info(f"Wrote repo-level evaluation matrix to {repo_matrix_csv}")
+
+    model_matrix_rows = aggregate_model_matrix(all_rows)
+    model_matrix_csv = output_dir / "results" / "cwbench_matrix_model.csv"
+    write_model_matrix_csv(model_matrix_csv, model_matrix_rows)
+    logger.info(f"Wrote model-level evaluation matrix to {model_matrix_csv}")
 
 
 if __name__ == "__main__":

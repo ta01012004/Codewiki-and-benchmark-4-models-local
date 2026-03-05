@@ -86,7 +86,7 @@ class VLLMBackend(InferenceBackend):
         except Exception:
             return f"System: {system_prompt}\n\nUser: {user_prompt}\n\nAssistant:"
 
-    def _generate_once(self, prompt: str, params: GenerationParams, max_tokens: int) -> str:
+    def _generate_once(self, prompt: str, params: GenerationParams, max_tokens: int) -> tuple[str, int]:
         from vllm import SamplingParams
 
         sampling_params = SamplingParams(
@@ -96,18 +96,23 @@ class VLLMBackend(InferenceBackend):
         )
         outputs = self.llm.generate([prompt], sampling_params=sampling_params, use_tqdm=False)
         if not outputs or not outputs[0].outputs:
-            return ""
-        return outputs[0].outputs[0].text.strip()
+            return "", 0
+        first = outputs[0].outputs[0]
+        completion_tokens = len(getattr(first, "token_ids", []) or [])
+        return first.text.strip(), int(completion_tokens)
 
     def generate(self, system_prompt: str, user_prompt: str, params: GenerationParams) -> str:
         prompt = self._build_prompt(system_prompt, user_prompt)
+        prompt_tokens = len(self.tokenizer.encode(prompt))
         max_tokens = int(params.max_new_tokens)
 
         for attempt in range(4):
             try:
                 with ThreadPoolExecutor(max_workers=1) as ex:
                     fut = ex.submit(self._generate_once, prompt, params, max_tokens)
-                    return fut.result(timeout=params.timeout_sec)
+                    text, completion_tokens = fut.result(timeout=params.timeout_sec)
+                self._record_usage(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
+                return text
             except FuturesTimeout as e:
                 raise TimeoutError(
                     f"Generation timed out for model={self.model_name} timeout={params.timeout_sec}s"
