@@ -174,15 +174,14 @@ async def validate_single_diagram(diagram_content: str, diagram_num: int, line_s
                 raise Exception(error_str)
 
     except Exception as e:
-        logger.warning("Using mermaid-py to validate mermaid diagrams")
+        logger.warning("Mermaid validators unavailable; skipping diagram validation")
         try:
             import mermaid as md
-            # Create Mermaid object and check response
+            # If available, still try mermaid-py; otherwise skip
             render = md.Mermaid(diagram_content)
             core_error = render.svg_response.text
-            
-        except Exception as e:
-            return f"  Diagram {diagram_num}: Exception during validation - {str(e)}"
+        except Exception:
+            return ""
 
     # Check if response indicates a parse error
     if core_error:

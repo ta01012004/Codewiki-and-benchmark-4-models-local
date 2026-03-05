@@ -3,6 +3,7 @@ Configuration manager with keyring integration for secure credential storage.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Optional
 import keyring
@@ -43,7 +44,7 @@ class ConfigManager:
         """Check if system keyring is available."""
         try:
             # Try to get/set a test value
-            keyring.get_password(KEYRING_SERVICE, "__test__")
+            os.getenv("OPENAI_API_KEY") or keyring.get_password(KEYRING_SERVICE, "__test__")
             return True
         except KeyringError:
             return False
@@ -72,7 +73,7 @@ class ConfigManager:
             
             # Load API key from keyring
             try:
-                self._api_key = keyring.get_password(KEYRING_SERVICE, KEYRING_API_KEY_ACCOUNT)
+                self._api_key = os.getenv("OPENAI_API_KEY") or keyring.get_password(KEYRING_SERVICE, KEYRING_API_KEY_ACCOUNT)
             except KeyringError:
                 # Keyring unavailable, API key will be None
                 pass
@@ -186,7 +187,7 @@ class ConfigManager:
         """
         if self._api_key is None:
             try:
-                self._api_key = keyring.get_password(KEYRING_SERVICE, KEYRING_API_KEY_ACCOUNT)
+                self._api_key = os.getenv("OPENAI_API_KEY") or keyring.get_password(KEYRING_SERVICE, KEYRING_API_KEY_ACCOUNT)
             except KeyringError:
                 pass
         
