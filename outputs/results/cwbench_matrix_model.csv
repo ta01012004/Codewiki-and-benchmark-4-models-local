@@ -1,5 +1,5 @@
-model_name,repos_total,repos_completed,completion_rate,mean_generation_time_sec,mean_qa_score,mean_coverage_score,mean_hierarchy_alignment,mean_leaf_coverage,mean_structural_fidelity,mean_factual_grounding,mean_actionability,mean_coherence,mean_required_sections_coverage,mean_key_term_coverage
-Qwen/Qwen2.5-Coder-7B-Instruct,22,22,1.0,0.0,0.0,0.72875,0.947727,0.954545,0.664924,0.486534,0.643939,0.78366,0.9375,0.256061
-deepseek-ai/deepseek-coder-6.7b-instruct,22,22,1.0,0.0,0.0,0.706206,0.952273,0.954545,0.650682,0.548774,0.469697,0.73452,0.948864,0.203409
-meta-llama/CodeLlama-7b-Instruct-hf,22,22,1.0,0.0,0.0,0.739569,0.972727,0.954545,0.682727,0.583814,0.530303,0.765983,1.0,0.206818
-mistralai/Mistral-7B-Instruct-v0.3,22,22,1.0,0.0,0.0,0.722966,0.979545,1.0,0.656591,0.559087,0.492424,0.747357,0.948864,0.218182
+model_name,repos_total,repos_completed,completion_rate,mean_generation_time_sec,qa_available_rate,mean_qa_score,mean_quality_score,mean_coverage_score,mean_hierarchy_alignment,mean_leaf_coverage,mean_structural_fidelity,mean_factual_grounding,mean_actionability,mean_coherence,mean_required_sections_coverage,mean_key_term_coverage
+Qwen/Qwen2.5-Coder-7B-Instruct,7,7,1.0,0.0,0.0,0.0,0.872874,0.852629,1.0,1.0,0.729048,0.633306,0.97619,0.891529,1.0,0.322619
+deepseek-ai/deepseek-coder-6.7b-instruct,7,7,1.0,0.0,0.0,0.0,0.785009,0.724892,1.0,1.0,0.682857,0.480009,0.619048,0.663076,1.0,0.207143
+meta-llama/CodeLlama-7b-Instruct-hf,7,7,1.0,0.0,0.0,0.0,0.671421,0.646492,0.828571,0.714286,0.658095,0.476643,0.52381,0.61601,1.0,0.145238
+mistralai/Mistral-7B-Instruct-v0.3,7,7,1.0,0.0,0.0,0.0,0.743045,0.706888,0.914286,0.857143,0.690952,0.478854,0.642857,0.681414,1.0,0.227381

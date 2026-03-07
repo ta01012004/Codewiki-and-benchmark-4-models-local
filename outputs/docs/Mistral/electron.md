@@ -1,36 +1,340 @@
 # Overview
-Repository `electron` appears to implement a modular system with 2535 source files at commit `828fd59a72e673acf03f878b4f488a40fca46dfe`.
+
+"kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "lib/browser/api/service-worker-main.ts",
+      "kind": "top_paths",
+      "importance": 8.0
+    },
+    {
+      "path": "lib/browser/api/auto-updater.ts",
+      "kind": "top_paths",
+      "importance": 8.0
+    }
+  ]
+}
+
+Evidence Pack:
+- Electron is a framework for building cross-platform desktop applications using web technologies like JavaScript, HTML, and CSS.
+- It is built on top of Chromium and Node.js, allowing developers to access the full power of both platforms.
+- The main problem it solves is enabling developers to create desktop applications using web technologies, while providing a native look and feel.
+- The repository contains a large number of test cases (
 
 ## Architecture
-Major components inferred from file/module analysis:
-- `docs`: The `electron/docs` module is a collection of documentation files that provide guidelines, explanations, and solutions for various aspects of Electron development
-- `root`: The `root` module in the Electron repository serves as the central hub for managing the project's development environment and providing resources for creating cross-platform desktop applications using JavaScript, HTML, a...
-- `default_app`: The `electron/default_app` module is a fundamental part of the Electron application, serving as the entry point and configuration hub
-- `npm`: The `npm` module in the `electron` repository is responsible for managing the project's dependencies, scripts, and metadata using the Node Package Manager (npm)
-- `script`: The `script/lib/util.py` module in the Electron repository serves as a utility module, offering a collection of reusable functions and classes for various tasks such as file operations, network downloads, process executi...
-- `spec`: , and manage dependencies and scripts through the `dependencies`, `devDependencies`, and `scripts` sections
+
+kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.cc",
+      "kind": "community_08",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.h",
+      "kind": "community_08",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.cc",
+      "kind": "community_08",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.h",
+      "kind": "community_08",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.cc",
+      "kind": "community_08",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.h",
+      "kind": "community_08",
+      "importance": 8.0
+    },
+    {
+      "path": "lib/browser/api/service-worker-main.ts",
+      "kind": "community_06",
+      "importance": 7.0
+    },
+    {
+      "path": "lib/browser/api/auto-updater.ts",
+      "kind": "community_06",
+      "importance": 7.0
+    }
+  ]
+}
+
+The Electron repository is primarily composed of several major subsystems, each with distinct responsibilities.
+
+1. **Entry Points**: The repository has multiple entry points, primarily `npm/index.js` and `script/release/notes/index.ts`. These files serve as the main entry points for the application and the release notes, respectively. Other entry points include test cases
+
+### Architecture Graph
 
 ```mermaid
+
 flowchart TD
-  E[Entrypoints]
-  C[Core Modules]
-  O[Outputs]
-  E --> C
-  C --> O
+  community_01[shell\nshell/browser/api/electron_api_extensions.cc, shell/browser/api/electron_api_extensions.h]
+  community_02[spec\nspec/fixtures/api/app-path/lib/index.js, spec/fixtures/api/electron-main-module/app/index.js]
+  community_03[docs\ndocs/api/extensions-api.md, docs/api/extensions.md]
+  community_04[patches\npatches/chromium/chore_defer_usb_service_getdevices_request_until_usb_service_is.patch, patches/chromium/custom_protocols_plzserviceworker.patch]
+  community_05[README.md\nREADME.md, tsconfig.default_app.json]
+  community_06[lib\nlib/browser/api/service-worker-main.ts, lib/browser/api/auto-updater.ts]
+  community_07[script\nscript/gen-filenames.ts, script/gen-hunspell-filenames.js]
+  community_08[lib\nscript/lib/util.py, script/lib/config.py]
+
 ```
 
 ## Data Flow / Execution Flow
-Typical execution path: `Entrypoint -> Core Modules -> Runtime Services -> Output/Side Effects`.
-Entrypoints initialize core modules, which orchestrate processing and emit outputs or side effects.
+
+"kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.cc",
+      "kind": "community",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.h",
+      "kind": "community",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.cc",
+      "kind": "community",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.h",
+      "kind": "community",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.cc",
+      "kind": "community",
+      "importance": 8.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.h",
+      "kind": "community",
+      "importance": 8.0
+    },
+    {
+      "path": "lib/browser/api/service-worker-main.ts",
+      "kind": "library",
+      "importance": 7.0
+    },
+    {
+      "path": "lib/browser/api/auto-updater.ts",
+      "kind": "library",
+      "importance": 7.0
+    }
+  ]
+}
+
+The main runtime path in Electron starts at the entrypoints, which include `npm/index.js`, various test files, and the devtools extension. The entrypoint `npm/index.js` initializes the main process, creating a new BrowserWindow and starting the renderer process.
+
+The main process communicates with the renderer process through IPC (Inter-Process Communication) channels. The renderer process, in turn, can create new renderer processes for each web
 
 ## Configuration & Dependencies
-- Build/dependency files: package.json, default_app/package.json, npm/package.json, spec/package.json, spec/is-valid-window/package.json, spec/fixtures/api/app-path/package.json, spec/fixtures/api/command-line/package.json, spec/fixtures/api/context-bridge/context-bridge-mutability/package.json, spec/fixtures/api/cookie-app/package.json, spec/fixtures/api/default-menu/package.json, spec/fixtures/api/exit-closes-all-windows-app/package.json, spec/fixtures/api/first-party-sets/base/package.json, spec/fixtures/api/first-party-sets/command-line/package.json, spec/fixtures/api/ipc-main-listeners/package.json, spec/fixtures/api/locale-check/package.json, spec/fixtures/api/mixed-sandbox-app/package.json, spec/fixtures/api/net-log/package.json, spec/fixtures/api/quit-app/package.json, spec/fixtures/api/relaunch/package.json, spec/fixtures/api/safe-storage/decrypt-app/package.json, spec/fixtures/api/safe-storage/encrypt-app/package.json, spec/fixtures/api/shared-dictionary/package.json, spec/fixtures/api/singleton-data/package.json, spec/fixtures/api/singleton-userdata/package.json, spec/fixtures/api/singleton/package.json, spec/fixtures/api/test-menu-null/package.json, spec/fixtures/api/test-menu-visibility/package.json, spec/fixtures/api/utility-process/env-app/package.json, spec/fixtures/api/utility-process/inherit-stderr/package.json, spec/fixtures/api/utility-process/inherit-stdout/package.json, spec/fixtures/api/window-all-closed/package.json, spec/fixtures/apps/crash/package.json, spec/fixtures/apps/node-options-utility-process/package.json, spec/fixtures/apps/open-new-window-from-link/package.json, spec/fixtures/apps/refresh-page/package.json, spec/fixtures/apps/remote-control/package.json, spec/fixtures/apps/self-module-paths/package.json, spec/fixtures/apps/set-path/package.json, spec/fixtures/apps/xwindow-icon/package.json, spec/fixtures/auto-update/check-with-headers/package.json, spec/fixtures/auto-update/check/package.json, spec/fixtures/auto-update/initial/package.json, spec/fixtures/auto-update/update-json/package.json, spec/fixtures/auto-update/update-stack/package.json, spec/fixtures/auto-update/update/package.json, spec/fixtures/esm/import-meta/package.json, spec/fixtures/esm/package/package.json, spec/fixtures/native-addon/echo/package.json, spec/fixtures/native-addon/external-ab/package.json, spec/fixtures/native-addon/osr-gpu/package.json, spec/fixtures/native-addon/uv-dlopen/package.json, spec/fixtures/snapshot-items-available/package.json
-- Config files: tsconfig.default_app.json, tsconfig.electron.json, tsconfig.json, tsconfig.script.json, tsconfig.spec.json, patches/config.json, spec/ts-smoke/tsconfig.json
+
+kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "spec/fixtures/api/app-path/lib/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    },
+    {
+      "path": "spec/fixtures/api/electron-main-module/app/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    }
+  ]
+}
+
+Evidence Pack excerpt:
+- The `npm/index.js` file is the main entrypoint for the repository.
+- The `package.json` file is the main build file for the repository.
+- The `tsconfig.json` file is the main configuration file for TypeScript in the repository.
+- The `spec/fixtures/extensions/devtools-extension/index.js`
 
 ## How to Run / Key Scripts
-- Detected entrypoints: npm/index.js, script/release/notes/index.ts, spec/index.js, spec/fixtures/api/app-path/lib/index.js, spec/fixtures/api/electron-main-module/app/index.js, spec/fixtures/auto-update/check-with-headers/index.js, spec/fixtures/auto-update/check/index.js, spec/fixtures/auto-update/initial/index.js, spec/fixtures/auto-update/update-json/index.js, spec/fixtures/auto-update/update-stack/index.js, spec/fixtures/auto-update/update/index.js, spec/fixtures/crash-cases/api-browser-destroy/index.js, spec/fixtures/crash-cases/early-in-memory-session-create/index.js, spec/fixtures/crash-cases/fs-promises-renderer-crash/index.js, spec/fixtures/crash-cases/in-memory-session-double-free/index.js, spec/fixtures/crash-cases/js-execute-iframe/index.js, spec/fixtures/crash-cases/native-window-open-exit/index.js, spec/fixtures/crash-cases/node-options-parsing/index.js, spec/fixtures/crash-cases/quit-on-crashed-event/index.js, spec/fixtures/crash-cases/safe-storage/index.js, spec/fixtures/crash-cases/setimmediate-renderer-crash/index.js, spec/fixtures/crash-cases/setimmediate-window-open-crash/index.js, spec/fixtures/crash-cases/transparent-window-get-background-color/index.js, spec/fixtures/crash-cases/utility-process-app-ready/index.js, spec/fixtures/crash-cases/webcontents-create-leak-exit/index.js, spec/fixtures/crash-cases/webcontentsview-create-leak-exit/index.js, spec/fixtures/crash-cases/webview-attach-destroyed/index.js, spec/fixtures/crash-cases/webview-contents-error-on-creation/index.js, spec/fixtures/crash-cases/webview-move-between-windows/index.js, spec/fixtures/crash-cases/webview-remove-on-wc-close/index.js, spec/fixtures/crash-cases/worker-multiple-destroy/index.js, spec/fixtures/extensions/devtools-extension/index.js, spec/fixtures/native-addon/uv-dlopen/index.js
-- Use repository build scripts/package manager tasks based on detected build files.
+
+"kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "spec/fixtures/api/app-path/lib/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "spec/fixtures/api/electron-main-module/app/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
+      "kind": "entrypoint",
+      "importance": 8.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/webview-remove-on-wc-close/index.js",
+      "kind": "entrypoint",
+      "importance": 7.0
+    },
+    {
+      "path": "spec/fixtures/crash-cases/webview-move-between-windows/index.js",
+      "kind": "entrypoint",
+      "importance": 7.0
+    }
+  ]
+}
+
+## How to Run / Key Scripts
+
+To run the Electron repository, you can use the following commands:
+
+1. **Building the project:**
+   ```
+   npm run build
+   ```
+   This command will build the project using the
 
 ## Notable Design Choices / Extension Points
-- The codebase is organized in modules that can be extended by adding new feature files under existing module boundaries.
-- Extension is likely centered around entrypoint wiring, configuration files, and module-specific implementations.
+
+",
+      "kind": "entrypoint",
+      "importance": 10.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_extensions.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_context.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.cc",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "shell/browser/api/electron_api_service_worker_main.h",
+      "kind": "top_paths",
+      "importance": 9.0
+    },
+    {
+      "path": "lib/browser/api/service-worker-main.ts",
+      "kind": "top_paths",
+      "importance": 8.0
+    },
+    {
+      "path": "lib/browser/api/auto-updater.ts",
+      "kind": "top_paths",
+      "importance": 8.0
+    }
+  ]
+}
+
+Evidence Pack excerpt:
+- Electron's architecture is built on top of Chromium, with additional APIs and features added to support desktop applications.
+- Electron provides a simple API for creating desktop applications using web technologies like HTML, CSS, and JavaScript.
+- Electron applications are essentially Chromium browsers with additional features like native menus, dialogs, and desktop capturing.
+- Electron applications can

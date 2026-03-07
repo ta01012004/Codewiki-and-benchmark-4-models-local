@@ -69,7 +69,7 @@ class RepoSummarizerV2:
 
     @staticmethod
     def _repo_cache_dir(output_dir: Path, repo_name: str) -> Path:
-        return output_dir / "cache_v2" / repo_name
+        return output_dir / "cache" / repo_name
 
     @staticmethod
     def _split_markdown_sections(text: str) -> list[tuple[str, str]]:
@@ -554,7 +554,7 @@ class RepoSummarizerV2:
             if not architecture_inserted:
                 doc_text += f"\n\n## Architecture\n\n### Architecture Graph\n```mermaid\n{mermaid}\n```"
 
-        docs_dir = output_dir / "docs_v2" / model_key
+        docs_dir = output_dir / "docs" / model_key
         docs_dir.mkdir(parents=True, exist_ok=True)
         doc_path = docs_dir / f"{ctx.sample.repo_name}.md"
         doc_path.write_text(doc_text, encoding="utf-8")

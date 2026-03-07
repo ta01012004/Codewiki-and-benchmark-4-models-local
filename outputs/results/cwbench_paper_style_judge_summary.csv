@@ -1,0 +1,5 @@
+model_name,repos_target,repos_scored,mean_weighted_quality_percent,mean_coverage_percent
+Qwen/Qwen2.5-Coder-7B-Instruct,7,7,20.0,18.57
+deepseek-ai/deepseek-coder-6.7b-instruct,7,7,15.09,15.03
+meta-llama/CodeLlama-7b-Instruct-hf,7,7,13.9,14.62
+mistralai/Mistral-7B-Instruct-v0.3,7,7,13.27,14.4

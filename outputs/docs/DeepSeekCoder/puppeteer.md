@@ -1,37 +1,91 @@
 # Overview
-Repository `puppeteer` appears to implement a modular system with 1895 source files at commit `c1105f125c71353587a837958c2748097ef2927d`.
+
+count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides
 
 ## Architecture
-Major components inferred from file/module analysis:
-- `packages`: The puppeteer repository's packages module is responsible for managing the core API for controlling headless Chrome over the DevTools Protocol, as well as the dependencies and scripts necessary for downloading and launch...
-- `docs`: the BoxModel object in the Puppeteer API
-- `root`: The Puppeteer repository, as a Node.js module, is responsible for automating browser actions using JavaScript
-- `examples`: The Puppeteer module in the repository is a collection of examples demonstrating the use of Puppeteer, a Node.js library developed by the Chrome team
-- `test`: The Puppeteer testing suite module is a key component of the repository, responsible for managing and building the test environment
-- `tools`: The Puppeteer repository's "tools" module is a comprehensive suite of tools for the Puppeteer project
-- `website`: The "website" module in the "puppeteer" repository is a crucial component of the project, responsible for managing and configuring the Docusaurus website
+
+map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing the search bar component. It uses the `SearchBar` component from `@docusaurus/theme-common` to add a search bar to the website.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing the search bar component. It uses the `SearchBar` component from `@docusaurus/theme-common` to add a search bar to the website.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality.
+
+### Architecture Graph
 
 ```mermaid
+
 flowchart TD
-  E[Entrypoints]
-  C[Core Modules]
-  O[Outputs]
-  E --> C
-  C --> O
+  community_01[website\nwebsite/src/theme/SearchMetadata/index.js, website/versioned_docs/version-24.17.1/api/puppeteer.browser.installextension.md]
+  community_02[docs\ndocs/api/puppeteer.browser.installextension.md, docs/api/puppeteer.browser.uninstallextension.md]
+  community_03[packages\npackages/testserver/src/index.ts, packages/browsers/package.json]
+  community_04[test\ntest/src/cdp/extensions.spec.ts, test/src/webExtension.spec.ts]
+  community_05[README.md\nREADME.md, package.json]
+  community_06[packages/puppeteer-core/src\npackages/puppeteer-core/src/index.ts, packages/puppeteer-core/src/tsconfig.cjs.json]
+  community_07[docs\ndocs/CHANGELOG.md, docs/contributing.md]
+  community_08[packages/puppeteer-core\npackages/puppeteer-core/package.json, packages/puppeteer-core/tsconfig.json]
+
 ```
 
 ## Data Flow / Execution Flow
-Typical execution path: `Entrypoint -> Core Modules -> Runtime Services -> Output/Side Effects`.
-Entrypoints initialize core modules, which orchestrate processing and emit outputs or side effects.
+
+onic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it
 
 ## Configuration & Dependencies
-- Build/dependency files: package.json, examples/puppeteer-in-browser/package.json, examples/puppeteer-in-extension/package.json, packages/browsers/package.json, packages/ng-schematics/package.json, packages/puppeteer-core/package.json, packages/puppeteer-core/third_party/parsel-js/package.json, packages/puppeteer/package.json, packages/testserver/package.json, test/package.json, test/installation/package.json, tools/docgen/package.json, tools/doctest/package.json, tools/eslint/package.json, tools/mocha-runner/package.json, website/package.json
-- Config files: tsconfig.base.json, release-please-config.json, packages/browsers/tsconfig.json, packages/browsers/src/tsconfig.cjs.json, packages/browsers/src/tsconfig.esm.json, packages/browsers/test/src/tsconfig.json, packages/ng-schematics/tsconfig.json, packages/ng-schematics/src/schematics/config/schema.json, packages/ng-schematics/test/tsconfig.json, packages/puppeteer-core/tsconfig.json, packages/puppeteer-core/src/tsconfig.cjs.json, packages/puppeteer-core/src/tsconfig.esm.json, packages/puppeteer-core/third_party/tsconfig.cjs.json, packages/puppeteer-core/third_party/tsconfig.json, packages/puppeteer/tsconfig.json, packages/puppeteer/src/tsconfig.cjs.json, packages/puppeteer/src/tsconfig.esm.json, packages/testserver/tsconfig.json, test/tsconfig.json, test/installation/tsconfig.json, test/installation/assets/puppeteer/tsconfig.json, tools/tsconfig.json, tools/docgen/tsconfig.json, tools/doctest/tsconfig.json, tools/eslint/tsconfig.json, tools/mocha-runner/tsconfig.json
+
+count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides
 
 ## How to Run / Key Scripts
-- Detected entrypoints: packages/ng-schematics/src/builders/puppeteer/index.ts, packages/ng-schematics/src/schematics/config/index.ts, packages/ng-schematics/src/schematics/e2e/index.ts, packages/ng-schematics/src/schematics/ng-add/index.ts, packages/puppeteer-core/src/index.ts, packages/testserver/src/index.ts, test/assets/simple-extension-firefox/index.js, test/assets/simple-extension/index.js, website/src/theme/SearchBar/index.js, website/src/theme/SearchMetadata/index.js, website/src/theme/SearchPage/index.js
-- Use repository build scripts/package manager tasks based on detected build files.
+
+monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing the search bar component. It uses the `SearchBar` component from `@docusaurus/theme-common` to add a search bar to the website.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing the search bar component. It uses the `SearchBar` component from `@docusaurus/theme-common` to add a search bar to the website.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for
 
 ## Notable Design Choices / Extension Points
-- The codebase is organized in modules that can be extended by adding new feature files under existing module boundaries.
-- Extension is likely centered around entrypoint wiring, configuration files, and module-specific implementations.
+
+is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_02
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus, as it provides unique identifiers for each webpage.
+
+The subsystem is structured internally with two chunks of code: `website/src/theme/SearchMetadata/index.js`. The first chunk, chunk::1, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. The second chunk, chunk::2, is responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter.
+
+## community_03
+The Puppeteer repository, a part of the larger Docusaurus project, is a subsystem responsible for managing metadata for search functionality. It uses the `Head` component from `@docusaurus/Head` to add metadata to the HTML document head. The metadata includes the language and a counter. The counter is a monotonic count map that tracks the global package version as a local, monotonic counter. This subsystem is crucial for the functioning of the search feature in Docusaurus

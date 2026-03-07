@@ -1,88 +1,58 @@
-# CodeWiki + CodeWikiBench (Local 4-Model HPC Benchmark)
+# R2poWiki Evaluation Platform
 
 <p align="center">
-  <strong>Holistic repository documentation with fully local open-source LLMs</strong>
+  <strong>Graph-aware repository documentation and CodeWikiBench evaluation with local open-source LLMs</strong>
 </p>
 
 <p align="center">
   <img src="./img/framework-overview.png" alt="Pipeline overview" width="760" />
 </p>
 
-This repository is my personal implementation and benchmark runner for **CodeWiki-style repository documentation generation** on **CodeWikiBench**, using 4 local models on HPC.
+This repository is the current default implementation of a **CodeWiki-inspired repository documentation pipeline** built for **fully local execution**. It generates architecture-level Markdown documentation, evaluates outputs on **CodeWikiBench**, and stores benchmark artifacts in a single default layout.
 
-## Highlights
+## What Is Default Now
 
-- Fully local inference: no paid API
-- Two-backend design: `transformers` + `vllm`
-- HPC-compatible workflow (gateway prefetch + GPU offline run)
-- Resumable execution, caching, retry for git operations, OOM fallback
-- Per-model benchmark CSV + merged summary CSV
+- Default pipeline: **V2**
+- Default documentation output: `outputs/docs/<model>/<repo>.md`
+- Default benchmark output: `outputs/results/*.csv`
+- Legacy V1 is still runnable with `--pipeline_version v1`, but it writes to `outputs/docs_v1`, `outputs/results_v1`, and `outputs/cache_v1`
 
-## Models Evaluated
+## Core V2 Ideas
+
+- **Graph / hierarchical decomposition**
+  - Build an architecture IR JSON from file nodes, directory nodes, import edges, config/build anchors, and lightweight community detection
+  - Render Mermaid from the IR instead of letting the model invent diagrams
+- **RAG + hierarchical summarization**
+  - Chunk code/docs/config files structurally
+  - Summarize chunks, then summarize subsystems, then synthesize final sections with section-specific retrieval
+- **Local-only inference**
+  - Supports `transformers` and `vllm`
+  - Designed for gateway prefetch + offline GPU-node execution
+
+## Models
 
 - `meta-llama/CodeLlama-7b-Instruct-hf`
 - `deepseek-ai/deepseek-coder-6.7b-instruct`
 - `mistralai/Mistral-7B-Instruct-v0.3`
 - `Qwen/Qwen2.5-Coder-7B-Instruct`
 
-## Token Settings Per Model
-
-The table below reflects the current generation settings in `configs/default.yaml`.
-
-| Model Alias | max_input_tokens | max_new_tokens | temperature | top_p | timeout_sec |
-|---|---:|---:|---:|---:|---:|
-| CodeLlama | default backend limit | 768 | 0.1 | 0.9 | 180 |
-| DeepSeekCoder | 3072 | 768 | 0.1 | 0.9 | 180 |
-| Mistral | default backend limit | 768 | 0.1 | 0.9 | 180 |
-| Qwen | default backend limit | 768 | 0.1 | 0.9 | 180 |
-
-Notes:
-- `max_input_tokens` is explicitly set for `DeepSeekCoder`; other models use backend defaults.
-- For `transformers`, the default input limit in this project is `3072` tokens unless overridden per model.
-
-## Current Results (train split, 22 repos)
-
-> QA is intentionally omitted in this table as requested.
-
-| Model | Completed Repos | Mean ROUGE-L | Mean Coverage |
-|---|---:|---:|---:|
-| CodeLlama-7b-Instruct-hf | 22/22 | 0.0212 | 0.6431 |
-| deepseek-coder-6.7b-instruct | 21/22 | 0.0173 | 0.5851 |
-| Mistral-7B-Instruct-v0.3 | 22/22 | 0.0231 | 0.6201 |
-| Qwen2.5-Coder-7B-Instruct | 22/22 | 0.0283 | 0.6309 |
-
-## Compare With CodeWiki Paper (Context)
-
-This repo is **not** a direct reproduction of the exact paper setup; it is a practical local-HPC variant.
-
-- CodeWiki paper: broader framework, often stronger frontier-model setup and richer generation stack.
-- This repo: emphasizes reproducibility with **local 7B-class OSS models**, offline GPU nodes, and robust engineering workflow.
-- Therefore, absolute scores are expected to differ; the main value here is **stable local benchmarking + deployable HPC pipeline**.
-
-## Project Structure
+## Repository Layout
 
 ```text
 codewiki_hpc/
   run.py
-  prefetch.py
   config.py
   dataset.py
   repo_manager.py
   file_selector.py
   summarizer.py
+  summarizer_v2.py
+  decomposition_v2.py
   prompts.py
+  prompts_v2.py
   inference/
-    base.py
-    hf_backend.py
-    vllm_backend.py
   evaluation/
-    metrics.py
-    qa_eval.py
-    rubric_eval.py
   utils/
-    cache.py
-    logging.py
-    text.py
 configs/
   default.yaml
 scripts/
@@ -94,24 +64,26 @@ outputs/
   results/
 ```
 
-## Prompt Design (Important)
+## Output Artifacts
 
-Prompt templates are centralized in `codewiki_hpc/prompts.py`:
+### Generated documentation
 
-- Stage A (`make_stage_a_user_prompt`): per-file role/responsibility summary
-- Stage B (`make_stage_b_user_prompt`): per-module synthesis from Stage A summaries
-- Stage C (`make_stage_c_user_prompt`): final holistic repository documentation
+- `outputs/docs/CodeLlama/*.md`
+- `outputs/docs/DeepSeekCoder/*.md`
+- `outputs/docs/Mistral/*.md`
+- `outputs/docs/Qwen/*.md`
 
-In `codewiki_hpc/summarizer.py`, Stage C also includes:
+### Benchmark results
 
-- anti-copy filtering for noisy HTML/docs link blocks
-- quality checks for final markdown structure
-- retry with reduced prompt budget
-- deterministic fallback document when generation repeatedly fails
+- `outputs/results/cwbench_CodeLlama-7b-Instruct-hf.csv`
+- `outputs/results/cwbench_deepseek-coder-6.7b-instruct.csv`
+- `outputs/results/cwbench_Mistral-7B-Instruct-v0.3.csv`
+- `outputs/results/cwbench_Qwen2.5-Coder-7B-Instruct.csv`
+- `outputs/results/cwbench_all_models.csv`
+- `outputs/results/cwbench_matrix_repo.csv`
+- `outputs/results/cwbench_matrix_model.csv`
 
-## End-to-End Run Guide (HPC)
-
-### 0) Environment
+## Setup
 
 ```bash
 cd /home/22011107/TA/NLPCODEWIKI/CodeWiki
@@ -119,19 +91,22 @@ conda activate codewiki_py312
 pip install -r requirements.txt
 ```
 
-### 1) Gateway node (has internet): prefetch repos
+## Gateway Prefetch
+
+Run on the gateway node to populate the git cache before moving to an offline GPU node:
 
 ```bash
 cd /home/22011107/TA/NLPCODEWIKI/CodeWiki
 ./scripts/prefetch_gateway.sh
 ```
 
-This fills `outputs/cache/repos/` so GPU nodes do not need internet.
+This fills `outputs/cache/repos/`.
 
-### 2) GPU node (offline): generate docs + evaluate
+## Run The Default Pipeline
+
+### Full local benchmark
 
 ```bash
-cd /home/22011107/TA/NLPCODEWIKI/CodeWiki
 python -m codewiki_hpc.run \
   --config configs/default.yaml \
   --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
@@ -144,12 +119,13 @@ python -m codewiki_hpc.run \
   --resume
 ```
 
-### 3) Continue unfinished run (resume)
+### Run the 7 paper repos only
 
 ```bash
 python -m codewiki_hpc.run \
   --config configs/default.yaml \
-  --models "Mistral,Qwen" \
+  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
+  --repos "OpenHands,svelte,puppeteer,ml-agents,logstash,wazuh,electron" \
   --split train \
   --max_repos 22 \
   --backend transformers \
@@ -159,80 +135,58 @@ python -m codewiki_hpc.run \
   --resume
 ```
 
-## Command Cookbook
+### Evaluation only on existing docs
 
-### Run one model only
+```bash
+python -m codewiki_hpc.run \
+  --config configs/default.yaml \
+  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
+  --repos "OpenHands,svelte,puppeteer,ml-agents,logstash,wazuh,electron" \
+  --split train \
+  --max_repos 22 \
+  --output_dir outputs \
+  --eval_only
+```
+
+### Run legacy V1 explicitly
 
 ```bash
 python -m codewiki_hpc.run \
   --config configs/default.yaml \
   --models "Qwen" \
   --split train \
-  --max_repos 22 \
+  --max_repos 1 \
   --backend transformers \
   --offline \
   --model_root /work/$USER/models \
   --output_dir outputs \
-  --resume
+  --pipeline_version v1
 ```
 
-### Regenerate only failed/unfinished rows
+## Token Settings
 
-```bash
-python -m codewiki_hpc.run \
-  --config configs/default.yaml \
-  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
-  --split train \
-  --max_repos 22 \
-  --backend transformers \
-  --offline \
-  --model_root /work/$USER/models \
-  --output_dir outputs \
-  --resume
-```
+Current defaults from `configs/default.yaml`:
 
-### Evaluation-only pass on existing docs
+| Model | max_input_tokens | max_new_tokens | temperature | top_p | timeout_sec |
+|---|---:|---:|---:|---:|---:|
+| CodeLlama | backend default | 768 | 0.1 | 0.9 | 180 |
+| DeepSeekCoder | 3072 | 768 | 0.1 | 0.9 | 180 |
+| Mistral | backend default | 768 | 0.1 | 0.9 | 180 |
+| Qwen | backend default | 768 | 0.1 | 0.9 | 180 |
 
-```bash
-python -m codewiki_hpc.run \
-  --config configs/default.yaml \
-  --models "CodeLlama,DeepSeekCoder,Mistral,Qwen" \
-  --split train \
-  --max_repos 22 \
-  --output_dir outputs \
-  --eval_only \
-  --resume
-```
+## Evaluation Notes
 
-## Output Artifacts
-
-### Benchmark CSVs
-
-- `outputs/results/cwbench_CodeLlama-7b-Instruct-hf.csv`
-- `outputs/results/cwbench_deepseek-coder-6.7b-instruct.csv`
-- `outputs/results/cwbench_Mistral-7B-Instruct-v0.3.csv`
-- `outputs/results/cwbench_Qwen2.5-Coder-7B-Instruct.csv`
-- `outputs/results/cwbench_all_models.csv`
-
-### Generated Documentation
-
-- `outputs/docs/CodeLlama/*.md`
-- `outputs/docs/DeepSeekCoder/*.md`
-- `outputs/docs/Mistral/*.md`
-- `outputs/docs/Qwen/*.md`
-
-Sample docs:
-- `outputs/docs/CodeLlama/trino.md`
-- `outputs/docs/Mistral/Chart.js.md`
-- `outputs/docs/Qwen/svelte.md`
+- The default in `codewiki_hpc.run` is the existing local heuristic evaluator
+- Additional judge-style evaluation utilities remain in the repo for paper-style experiments
+- For paper-consistent comparisons, prefer running on the same 7 repositories used in your analysis subset
 
 ## Practical Notes
 
-- If you see many `git clone ... exit 128` errors on GPU: run prefetch on gateway first.
-- If Stage C output is low-quality/copy-heavy, the pipeline auto-retries and can fallback to deterministic template synthesis.
-- If interrupted (`Ctrl+C`), rerun with `--resume`.
-- For this cluster, use offline mode on GPU by default.
+- GPU nodes can be offline; use gateway prefetch first
+- If interrupted, rerun with `--resume`
+- If a repo clone is missing in offline mode, repopulate `outputs/cache/repos` from the gateway
+- The default path layout now reflects the V2 pipeline only
 
 ## License
 
-MIT (inherits upstream project licensing for integrated components).
+MIT, with upstream dependencies and benchmark data subject to their own licenses

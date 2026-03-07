@@ -1,36 +1,145 @@
 # Overview
-Repository `ml-agents` appears to implement a modular system with 1907 source files at commit `4cf2f49ad0a973c95eb41325aa3a46959f187708`.
+
+space, and reward function of the environment, as well as providing the necessary methods for interacting with the environment.
+
+The subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the ml-agents-envs subsystem and other subsystems are minimal, with the ml-agents-envs subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the ml-agents-envs subsystem provides a Python Environment API for interacting with the Unity environment, allowing developers to define the agent's behavior and reward function. It also provides methods for interacting with the environment, such as resetting the environment and stepping through the environment.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for using the ML-Agents Toolkit. It provides a user interface for interacting with the training process, visualizing the results, and deploying the trained models.
+
+The subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the Project subsystem and other subsystems are minimal, with the Project subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the Project subsystem provides a user interface for interacting with the training process, visualizing the results, and deploying the trained models. It also provides methods for interacting with the environment, such as resetting the environment and stepping through the environment.
+
+Potential extension points for the Project subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes
 
 ## Architecture
-Major components inferred from file/module analysis:
-- `ml-agents-trainer-plugin`: The ml-agents-trainer-plugin module in the ml-agents repository is a crucial component that serves as the primary entry point for setup and distribution of the package
-- `ml-agents`: learning
-- `root`: The ml-agents repository's pytest.ini file serves as the configuration file for pytest, a popular testing framework in Python
-- `com.unity.ml-agents`: The com.unity.ml-agents module in the ml-agents repository is a key component of Unity, providing a machine learning framework for creating intelligent behaviors in Unity environments
-- `ml-agents-envs`: Module: ml-agents-envs  The ml-agents-envs module is a key component of the Unity Machine Learning Agents framework
-- `ml-agents-plugin-examples`: The ml-agents-plugin-examples module in the ml-agents repository is a Python package that provides a stats writer example for the ML-Agents framework
+
+, and reward function of the environment, as well as providing the necessary methods for interacting with the environment.
+
+The ml-agents-envs subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the ml-agents-envs subsystem and the ml-agents subsystem are minimal, with the ml-agents-envs subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the ml-agents-envs subsystem provides the necessary tools for defining the environment in which the agents operate. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom components or modify existing ones to suit their specific needs.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for users of the ML-Agents Toolkit. It provides a user interface for training and deploying agents in Unity environments, as well as for managing and deploying trained models.
+
+The Project subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the Project subsystem and the ml-agents subsystem are minimal, with the Project subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the Project subsystem provides the necessary tools for training agents using reinforcement learning. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers
+
+### Architecture Graph
 
 ```mermaid
+
 flowchart TD
-  E[Entrypoints]
-  C[Core Modules]
-  O[Outputs]
-  E --> C
-  C --> O
+  community_01[com.unity.ml-agents\ncom.unity.ml-agents/Documentation~/Readme.md, com.unity.ml-agents/README.md]
+  community_02[mlagents_envs\nml-agents-envs/mlagents_envs/base_env.py, ml-agents-envs/mlagents_envs/logging_util.py]
+  community_03[Project\nProject/ProjectSettings/SceneTemplateSettings.json, Project/Assets/ML-Agents/Examples/Basic/Demos/ExpertBasic.demo.meta]
+  community_04[mlagents_envs\nml-agents-envs/mlagents_envs/exception.py, ml-agents-envs/mlagents_envs/environment.py]
+  community_05[config\nconfig/ppo/Match3.yaml, config/ppo/PushBlock.yaml]
+  community_06[docs\ndocs/Inference-Engine.md, docs/Python-Custom-Trainer-Plugin.md]
+  community_07[config/ppo\nconfig/ppo/3DBall.yaml, config/ppo/3DBallHard.yaml]
+  community_08[config/sac\nconfig/sac/3DBall.yaml, config/sac/3DBallHard.yaml]
+  community_02 -->|267.2| community_04
+
 ```
 
 ## Data Flow / Execution Flow
-Typical execution path: `Entrypoint -> Core Modules -> Runtime Services -> Output/Side Effects`.
-Entrypoints initialize core modules, which orchestrate processing and emit outputs or side effects.
+
+observation space, and reward function of the environment, as well as providing the necessary methods for interacting with the environment.
+
+The ml-agents-envs subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the ml-agents-envs subsystem and the ml-agents subsystem are minimal, with the ml-agents-envs subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the ml-agents-envs subsystem provides the necessary tools for defining the environment in which the agents operate. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom components or modify existing ones to suit their specific needs.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for training and deploying agents in Unity. It provides a user-friendly interface for configuring and running training sessions, as well as deploying trained models.
+
+The Project subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the Project subsystem and the ml-agents subsystem are minimal, with the Project subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the Project subsystem provides the necessary tools for training agents using reinforcement learning. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom
 
 ## Configuration & Dependencies
-- Build/dependency files: com.unity.ml-agents/package.json, ml-agents-envs/setup.py, ml-agents-plugin-examples/setup.py, ml-agents-trainer-plugin/setup.py, ml-agents/setup.py
-- Config files: .pre-commit-config.yaml, .yamato/wrench/wrench_config.json, DevProject/ProjectSettings/SceneTemplateSettings.json, DevProject/ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json, PerformanceProject/ProjectSettings/Packages/com.unity.testtools.codecoverage/Settings.json, Project/ProjectSettings/SceneTemplateSettings.json, config/imitation/Crawler.yaml, config/imitation/Hallway.yaml, config/imitation/PushBlock.yaml, config/imitation/Pyramids.yaml, config/poca/DungeonEscape.yaml, config/poca/PushBlockCollab.yaml, config/poca/SoccerTwos.yaml, config/poca/StrikersVsGoalie.yaml, config/ppo/3DBall.yaml, config/ppo/3DBallHard.yaml, config/ppo/3DBall_randomize.yaml, config/ppo/Basic.yaml, config/ppo/Crawler.yaml, config/ppo/FoodCollector.yaml, config/ppo/GridWorld.yaml, config/ppo/Hallway.yaml, config/ppo/Match3.yaml, config/ppo/PushBlock.yaml, config/ppo/Pyramids.yaml, config/ppo/PyramidsRND.yaml, config/ppo/Sorter_curriculum.yaml, config/ppo/Visual3DBall.yaml, config/ppo/VisualFoodCollector.yaml, config/ppo/Walker.yaml, config/ppo/WallJump.yaml, config/ppo/WallJump_curriculum.yaml, config/ppo/Worm.yaml, config/sac/3DBall.yaml, config/sac/3DBallHard.yaml, config/sac/Basic.yaml, config/sac/Crawler.yaml, config/sac/FoodCollector.yaml, config/sac/GridWorld.yaml, config/sac/Hallway.yaml, config/sac/PushBlock.yaml, config/sac/Pyramids.yaml, config/sac/Walker.yaml, config/sac/WallJump.yaml, config/sac/Worm.yaml, ml-agents-envs/pydoc-config.yaml, ml-agents/pydoc-config.yaml
+
+space, and reward function of the environment, as well as providing the necessary methods for interacting with the environment.
+
+The ml-agents-envs subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the ml-agents-envs subsystem and other subsystems are minimal, with the ml-agents-envs subsystem depending on the RL Core and the Learning Environment. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the ml-agents-envs subsystem provides the necessary tools for defining the environment in which the agents operate. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom components or modify existing ones to suit their specific needs.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for using the ML-Agents Toolkit. It provides a set of examples and pre-trained models that developers can use to train their own agents. It also provides a set of tools for visualizing the training process and for deploying the trained models in Unity environments.
+
+The Project subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the Project subsystem and other subsystems are minimal, with the Project subsystem depending on the RL Core and the Learning Environment. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the Project subsystem provides the necessary tools for training agents using reinforcement learning. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models.
 
 ## How to Run / Key Scripts
-- Detected entrypoints: not clearly detected
-- Use repository build scripts/package manager tasks based on detected build files.
+
+, observation space, and reward function of the environment, as well as providing the necessary methods for interacting with the environment.
+
+The ml-agents-envs subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the ml-agents-envs subsystem and other subsystems are minimal, with the ml-agents-envs subsystem depending on the RL Core and the Learning Environment. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the ml-agents-envs subsystem provides the necessary tools for defining the environment in which the agents operate. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom components or modify existing ones to suit their specific needs.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom reward functions, modify the learning algorithm, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for training and deploying agents in Unity. It provides a user-friendly interface for configuring and running training sessions, as well as deploying trained models for inference.
+
+The Project subsystem is designed to be modular, allowing for customization and extension. It provides a flexible environment for training and deploying reinforcement learning (RL) models, enabling developers to create complex, multi-agent systems.
+
+Dependencies between the Project subsystem and other subsystems are minimal, with the Project subsystem depending on the RL Core and the Learning Environment. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+At runtime, the Project subsystem provides the necessary tools for training agents using reinforcement learning. It provides a flexible environment for defining the agent's behavior, and a powerful inference engine for running the trained models. The subsystem is designed to be extensible, allowing developers to add custom components or modify existing ones
 
 ## Notable Design Choices / Extension Points
-- The codebase is organized in modules that can be extended by adding new feature files under existing module boundaries.
-- Extension is likely centered around entrypoint wiring, configuration files, and module-specific implementations.
+
+environment in which the agents operate, and it provides a flexible interface for defining the agent's behavior.
+
+The ml-agents-envs subsystem is designed to be modular, allowing for customization and extension. It provides a variety of environments for training agents, including simple grid-world environments and more complex, multi-agent environments.
+
+Dependencies between the ml-agents-envs subsystem and the ml-agents subsystem are minimal, with the ml-agents-envs subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their environments based on their specific needs.
+
+Potential extension points for the ml-agents-envs subsystem include the ability to add custom environments, modify the environment's behavior, or add support for different types of agents. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_03
+The Project subsystem is the main entry point for using the ML-Agents Toolkit. It provides a user interface for training and deploying agents in Unity environments, and it provides a variety of examples and pre-trained models for training agents.
+
+The Project subsystem is designed to be modular, allowing for customization and extension. It provides a variety of examples for training agents, including simple grid-world examples and more complex, multi-agent examples. It also provides a variety of pre-trained models for training agents, including models trained using different reinforcement learning algorithms.
+
+Dependencies between the Project subsystem and the ml-agents subsystem are minimal, with the Project subsystem depending on the ml-agents subsystem. This design allows for flexibility in how these components interact, and for developers to customize their training process based on their specific needs.
+
+Potential extension points for the Project subsystem include the ability to add custom training processes, modify the training process's behavior, or add support for different types of environments. This makes it a versatile tool for training a wide range of intelligent agents in Unity.
+
+## community_04
+The ml-agents-envs subsystem is a key component of the ML-Agents Toolkit, providing a Python Environment API for training and deploying intelligent agents in Unity environments. It is responsible for defining the environment in which the agents operate

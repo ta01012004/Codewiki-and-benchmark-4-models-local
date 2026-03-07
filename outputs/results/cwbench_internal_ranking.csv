@@ -1,0 +1,5 @@
+rank,model_name,mean_quality_score,mean_coverage_score,mean_hierarchy_alignment,mean_leaf_coverage,mean_structural_fidelity,mean_factual_grounding,mean_actionability,mean_coherence,qa_available_rate,method_note
+1,meta-llama/CodeLlama-7b-Instruct-hf,0.787605,0.739569,0.972727,0.954545,0.682727,0.583814,0.530303,0.765983,0.0,"Comparable within this run only (same evaluator, same data, same config)."
+2,mistralai/Mistral-7B-Instruct-v0.3,0.782144,0.722966,0.979545,1.0,0.656591,0.559087,0.492424,0.747357,0.0,"Comparable within this run only (same evaluator, same data, same config)."
+3,Qwen/Qwen2.5-Coder-7B-Instruct,0.773354,0.72875,0.947727,0.954545,0.664924,0.486534,0.643939,0.78366,0.0,"Comparable within this run only (same evaluator, same data, same config)."
+4,deepseek-ai/deepseek-coder-6.7b-instruct,0.760925,0.706206,0.952273,0.954545,0.650682,0.548774,0.469697,0.73452,0.0,"Comparable within this run only (same evaluator, same data, same config)."

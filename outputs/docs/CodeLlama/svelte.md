@@ -1,36 +1,333 @@
 # Overview
-Repository `svelte` appears to implement a modular system with 7854 source files at commit `be645b4d9f84cb7580683c7b2336d1023906c4da`.
+
+0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entrypoint",
 
 ## Architecture
-Major components inferred from file/module analysis:
-- `root`: 
-- `packages`: The `packages/svelte/package.json` file is the configuration file for the Svelte package, which is a JavaScript library for building web applications
-- `playgrounds`: The `playgrounds/sandbox/package.json` file is a critical component of the Svelte project, as it defines the project's metadata, dependencies, and scripts
-- `documentation`: velte applications
-- `.changeset`: The `.changeset` module in the `svelte` repository is responsible for managing the versioning and changelog of the repository
-- `.vscode`: The .vscode module in the Svelte repository is responsible for configuring the Visual Studio Code (VS Code) debugger for debugging Node.js applications
+
+.0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entrypoint",
+
+### Architecture Graph
 
 ```mermaid
+
 flowchart TD
-  E[Entrypoints]
-  C[Core Modules]
-  O[Outputs]
-  E --> C
-  C --> O
+  community_01[packages/svelte\npackages/svelte/tests/runtime-browser/custom-elements-samples/$$props/_config.js, packages/svelte/tests/runtime-browser/custom-elements-samples/$$props/main.svelte]
+  community_02[packages/svelte\npackages/svelte/src/compiler/migrate/index.js, packages/svelte/src/compiler/phases/3-transform/css/index.js]
+  community_03[packages/svelte\npackages/svelte/tests/runtime-legacy/samples/key-block-transition-global/_config.js, packages/svelte/tests/runtime-legacy/samples/key-block-transition-global/main.svelte]
+  community_04[documentation/docs\ndocumentation/docs/index.md, documentation/docs/98-reference/30-runtime-errors.md]
+  community_05[documentation/docs/02-runes\ndocumentation/docs/02-runes/01-what-are-runes.md, documentation/docs/02-runes/02-$state.md]
+  community_06[README.md\nREADME.md, package.json]
+  community_07[documentation/docs/01-introduction\ndocumentation/docs/01-introduction/01-overview.md, documentation/docs/01-introduction/02-getting-started.md]
+  community_08[packages/svelte/tests\npackages/svelte/tests/runtime-legacy/samples/reactive-values-text-node/_config.js, packages/svelte/tests/runtime-legacy/samples/reactive-values-text-node/main.svelte]
+
 ```
 
 ## Data Flow / Execution Flow
-Typical execution path: `Entrypoint -> Core Modules -> Runtime Services -> Output/Side Effects`.
-Entrypoints initialize core modules, which orchestrate processing and emit outputs or side effects.
+
+9.0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entrypoint",
 
 ## Configuration & Dependencies
-- Build/dependency files: package.json, packages/svelte/package.json, packages/svelte/compiler/package.json, playgrounds/sandbox/package.json
-- Config files: .changeset/config.json, .vscode/settings.json, benchmarking/tsconfig.json, packages/svelte/tsconfig.generated.json, packages/svelte/tsconfig.json, packages/svelte/tsconfig.runtime.json, packages/svelte/tests/types/tsconfig.json, playgrounds/sandbox/tsconfig.json
+
+0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entrypoint",
 
 ## How to Run / Key Scripts
-- Detected entrypoints: benchmarking/benchmarks/reactivity/index.js, benchmarking/benchmarks/ssr/index.js, benchmarking/compare/index.js, packages/svelte/scripts/process-messages/index.js, packages/svelte/src/animate/index.js, packages/svelte/src/attachments/index.js, packages/svelte/src/compiler/index.js, packages/svelte/src/compiler/migrate/index.js, packages/svelte/src/compiler/phases/1-parse/index.js, packages/svelte/src/compiler/phases/2-analyze/index.js, packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js, packages/svelte/src/compiler/phases/3-transform/index.js, packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js, packages/svelte/src/compiler/phases/3-transform/css/index.js, packages/svelte/src/compiler/preprocess/index.js, packages/svelte/src/easing/index.js, packages/svelte/src/events/index.js, packages/svelte/src/internal/index.js, packages/svelte/src/internal/client/index.js, packages/svelte/src/internal/flags/index.js, packages/svelte/src/internal/server/index.js, packages/svelte/src/motion/index.js, packages/svelte/src/reactivity/window/index.js, packages/svelte/src/server/index.js, packages/svelte/src/store/shared/index.js, packages/svelte/src/transition/index.js
-- Use repository build scripts/package manager tasks based on detected build files.
+
+9.0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entrypoint
 
 ## Notable Design Choices / Extension Points
-- The codebase is organized in modules that can be extended by adding new feature files under existing module boundaries.
-- Extension is likely centered around entrypoint wiring, configuration files, and module-specific implementations.
+
+": 9.0
+    },
+    {
+      "path": "packages/svelte/src/attachments/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/migrate/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/1-parse/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/2-analyze/visitors/shared/a11y/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/client/transform-template/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/css/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/phases/3-transform/index.js",
+      "kind": "entrypoint",
+      "importance": 9.0
+    },
+    {
+      "path": "packages/svelte/src/compiler/preprocess/index.js",
+      "kind": "entry

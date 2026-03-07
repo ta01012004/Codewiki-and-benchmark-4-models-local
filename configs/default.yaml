@@ -1,6 +1,6 @@
 backend: vllm
 output_dir: outputs
-pipeline_version: v1
+pipeline_version: v2
 
 runtime:
   seed: 42

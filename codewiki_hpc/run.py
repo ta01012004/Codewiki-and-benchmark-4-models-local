@@ -173,15 +173,15 @@ def _dedupe_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _pipeline_suffix(pipeline_version: str) -> str:
-    return "_V2" if pipeline_version == "v2" else ""
+    return "_V1" if pipeline_version == "v1" else ""
 
 
 def _results_dir(output_dir: Path, pipeline_version: str) -> Path:
-    return output_dir / ("results_v2" if pipeline_version == "v2" else "results")
+    return output_dir / ("results_v1" if pipeline_version == "v1" else "results")
 
 
 def _cache_dir(output_dir: Path, pipeline_version: str) -> Path:
-    return output_dir / ("cache_v2" if pipeline_version == "v2" else "cache")
+    return output_dir / ("cache_v1" if pipeline_version == "v1" else "cache")
 
 
 def _model_csv_name(model_cfg: dict[str, Any], fallback_key: str, pipeline_version: str) -> str:
@@ -190,7 +190,7 @@ def _model_csv_name(model_cfg: dict[str, Any], fallback_key: str, pipeline_versi
 
 
 def _default_doc_path(output_dir: Path, model_key: str, repo_name: str, pipeline_version: str) -> Path:
-    docs_dir_name = "docs_v2" if pipeline_version == "v2" else "docs"
+    docs_dir_name = "docs_v1" if pipeline_version == "v1" else "docs"
     return output_dir / docs_dir_name / model_key / f"{repo_name}.md"
 
 
@@ -200,7 +200,7 @@ def main() -> None:
 
     output_dir = Path(cfg.get("output_dir", "outputs"))
     output_dir.mkdir(parents=True, exist_ok=True)
-    pipeline_version = str(cfg.get("pipeline_version", "v1")).lower().strip()
+    pipeline_version = str(cfg.get("pipeline_version", "v2")).lower().strip()
     if pipeline_version not in {"v1", "v2"}:
         raise ValueError(f"Unsupported pipeline_version={pipeline_version}. Expected 'v1' or 'v2'.")
     results_dir = _results_dir(output_dir, pipeline_version)
