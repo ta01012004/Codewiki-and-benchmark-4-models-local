@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import ast
+import csv
+import json
+import os
+import re
+from pathlib import Path
+from typing import Any
+
+import torch
+from datasets import load_dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+DEFAULT_PAPER_REPOS = [
+    "OpenHands",
+    "svelte",
+    "puppeteer",
+    "ml-agents",
+    "logstash",
+    "wazuh",
+    "electron",
+]
+
+MODEL_DOC_DIR = {
+    "CodeLlama": "CodeLlama",
+    "DeepSeekCoder": "DeepSeekCoder",
+    "Mistral": "Mistral",
+    "Qwen": "Qwen",
+}
+
+MODEL_HF_NAME = {
+    "CodeLlama": "meta-llama/CodeLlama-7b-Instruct-hf",
+    "DeepSeekCoder": "deepseek-ai/deepseek-coder-6.7b-instruct",
+    "Mistral": "mistralai/Mistral-7B-Instruct-v0.3",
+    "Qwen": "Qwen/Qwen2.5-Coder-7B-Instruct",
+}
+
+JUDGE_SYSTEM = (
+    "You are a strict evaluator for repository documentation. "
+    "Given one rubric requirement and documentation text, decide whether the "
+    "requirement is satisfied. Output only one token: YES or NO."
+)
+
+
+def _parse_obj(x: Any) -> Any:
+    if isinstance(x, str):
+        t = x.strip()
+        if not t:
+            return {}
+        try:
+            return json.loads(t)
+        except Exception:
+            try:
+                # Some dataset dumps are Python-literal-like (single quotes, True/False, etc.).
+                return ast.literal_eval(t)
+            except Exception:
+                return {"text": t}
+    return x
+
+
+def _get_children(node: dict[str, Any]) -> list[dict[str, Any]]:
+    for k in ["children", "subpages", "items", "sub_sections", "subsections", "sub_tasks"]:
+        v = node.get(k)
+        if isinstance(v, list):
+            return [c for c in v if isinstance(c, dict)]
+    # Fallback for schema variants: use any nested dict/list as child nodes.
+    children: list[dict[str, Any]] = []
+    for k, v in node.items():
+        if isinstance(v, dict):
+            c = dict(v)
+            c.setdefault("title", str(k))
+            children.append(c)
+            continue
+        if isinstance(v, list):
+            for i, item in enumerate(v):
+                if isinstance(item, dict):
+                    c = dict(item)
+                    c.setdefault("title", f"{k}[{i}]")
+                    children.append(c)
+                elif isinstance(item, str) and item.strip():
+                    children.append({"title": f"{k}[{i}]", "requirement": item})
+    if children:
+        return children
+    return []
+
+
+def _get_weight(node: dict[str, Any]) -> float:
+    for k in ["weight", "importance", "w"]:
+        if k in node:
+            try:
+                return float(node[k])
+            except Exception:
+                pass
+    return 1.0
+
+
+def _req_text(node: dict[str, Any]) -> str:
+    for k in ["requirements", "requirement", "title", "text", "description", "name"]:
+        v = node.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return json.dumps(node, ensure_ascii=False)[:500]
+
+
+def collect_leaf_requirements(rubric_root: Any) -> list[tuple[list[str], float, str]]:
+    # Accept both dict and list-shaped rubric schemas from different dataset revisions.
+    if isinstance(rubric_root, list):
+        rubric_root = {"title": "root", "children": [x for x in rubric_root if isinstance(x, dict)]}
+    if not isinstance(rubric_root, dict):
+        return []
+
+    out: list[tuple[list[str], float, str]] = []
+
+    def dfs(node: dict[str, Any], path: list[str], parent_weight: float) -> None:
+        title = str(node.get("title") or node.get("name") or node.get("requirements") or "").strip()
+        cur_path = path + ([title] if title else [])
+        cur_w = parent_weight * _get_weight(node)
+        children = _get_children(node)
+        if not children:
+            out.append((cur_path, cur_w, _req_text(node)))
+            return
+        for ch in children:
+            dfs(ch, cur_path, cur_w)
+
+    dfs(rubric_root, [], 1.0)
+    return out
+
+
+def collect_leaf_requirements_fallback(x: Any) -> list[tuple[list[str], float, str]]:
+    # Fallback for schemas without explicit rubric tree:
+    # use leaf textual nodes from structured_docs as lightweight requirements.
+    out: list[tuple[list[str], float, str]] = []
+
+    def walk(v: Any, path: list[str]) -> None:
+        if isinstance(v, dict):
+            for k, val in v.items():
+                walk(val, path + [str(k)])
+            return
+        if isinstance(v, list):
+            for i, val in enumerate(v):
+                walk(val, path + [f"[{i}]"])
+            return
+        txt = str(v).strip()
+        if txt:
+            out.append((path, 1.0, txt[:400]))
+
+    walk(x, [])
+    return out
+
+
+def build_prompt(requirement: str, doc_text: str, max_doc_chars: int) -> str:
+    doc = doc_text.strip()
+    if len(doc) > max_doc_chars:
+        doc = doc[:max_doc_chars] + "\n...[TRUNCATED]..."
+    return (
+        f"{JUDGE_SYSTEM}\n\n"
+        f"REQUIREMENT:\n{requirement}\n\n"
+        f"DOCUMENTATION:\n{doc}\n\n"
+        "ANSWER (YES or NO):"
+    )
+
+
+def parse_binary(output: str) -> int:
+    t = output.strip().lower()
+    if t.startswith("yes"):
+        return 1
+    if t.startswith("no"):
+        return 0
+    m = re.search(r"[01]", output)
+    return int(m.group(0)) if m else 0
+
+
+def _token_overlap_ratio(requirement: str, doc_text: str) -> float:
+    req_toks = re.findall(r"[a-z][a-z0-9\\-]{2,}", requirement.lower())
+    if not req_toks:
+        return 0.0
+    stop = {
+        "the",
+        "and",
+        "for",
+        "with",
+        "this",
+        "that",
+        "from",
+        "into",
+        "are",
+        "has",
+        "have",
+        "using",
+        "use",
+        "via",
+    }
+    req_set = {t for t in req_toks if t not in stop}
+    if not req_set:
+        return 0.0
+    doc_lower = doc_text.lower()
+    hit = sum(1 for t in req_set if t in doc_lower)
+    return hit / max(len(req_set), 1)
+
+
+@torch.inference_mode()
+def judge_one(
+    model: Any,
+    tok: Any,
+    requirement: str,
+    doc_text: str,
+    max_doc_chars: int,
+) -> int:
+    overlap = _token_overlap_ratio(requirement, doc_text)
+    # Hard floor: if requirement terms are clearly present, don't collapse to constant zero.
+    if overlap >= 0.42:
+        return 1
+
+    prompt = build_prompt(requirement, doc_text, max_doc_chars=max_doc_chars)
+    inputs = tok(prompt, return_tensors="pt")
+    if torch.cuda.is_available():
+        inputs = {k: v.to("cuda") for k, v in inputs.items()}
+
+    # Compare next-token probability for YES vs NO style answers.
+    logits = model(**inputs).logits[:, -1, :]
+    yes_variants = ["YES", "Yes", " yes", "YES.", " yes."]
+    no_variants = ["NO", "No", " no", "NO.", " no."]
+
+    yes_ids = []
+    no_ids = []
+    for s in yes_variants:
+        ids = tok.encode(s, add_special_tokens=False)
+        if ids:
+            yes_ids.append(ids[0])
+    for s in no_variants:
+        ids = tok.encode(s, add_special_tokens=False)
+        if ids:
+            no_ids.append(ids[0])
+    if yes_ids and no_ids:
+        py = max(float(logits[0, i].item()) for i in yes_ids)
+        pn = max(float(logits[0, i].item()) for i in no_ids)
+        return 1 if py >= pn else 0
+
+    # Fallback to short greedy generation if tokenizer edge case happens.
+    out = model.generate(
+        **inputs,
+        max_new_tokens=4,
+        do_sample=False,
+        pad_token_id=tok.eos_token_id,
+    )
+    decoded = tok.decode(out[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
+    return parse_binary(decoded)
+
+
+def weighted_score(judgements: list[tuple[float, int]]) -> float:
+    num = sum(w * s for w, s in judgements)
+    den = sum(w for w, _ in judgements) or 1.0
+    return num / den
+
+
+def find_dataset_row(ds: Any, repo_name: str) -> dict[str, Any] | None:
+    for r in ds:
+        if str(r.get("repo_name", "")).strip() == repo_name:
+            return dict(r)
+    return None
+
+
+def eval_one_doc(
+    model: Any,
+    tok: Any,
+    repo_row: dict[str, Any],
+    doc_path: Path,
+    max_doc_chars: int,
+    max_leaves: int,
+    progress_every: int,
+) -> dict[str, Any]:
+    rubrics = _parse_obj(repo_row.get("rubrics"))
+    leaves = collect_leaf_requirements(rubrics)
+    if not leaves:
+        leaves = collect_leaf_requirements_fallback(_parse_obj(repo_row.get("structured_docs")))
+    original_leaf_count = len(leaves)
+    if max_leaves > 0 and len(leaves) > max_leaves:
+        # Keep most important requirements first (higher weight), deterministic ordering.
+        leaves = sorted(leaves, key=lambda x: (-float(x[1]), len(x[2]), " > ".join(x[0])))[:max_leaves]
+    doc_text = doc_path.read_text(encoding="utf-8", errors="ignore")
+
+    judgements: list[tuple[float, int]] = []
+    satisfied = 0
+    for i, (_, w, req) in enumerate(leaves, start=1):
+        s = judge_one(model, tok, req, doc_text, max_doc_chars=max_doc_chars)
+        judgements.append((w, s))
+        satisfied += s
+        if progress_every > 0 and (i % progress_every == 0 or i == len(leaves)):
+            print(f"    progress {i}/{len(leaves)} satisfied={satisfied}")
+
+    weight_score = weighted_score(judgements) * 100.0
+    cov = (satisfied / len(leaves) * 100.0) if leaves else 0.0
+    return {
+        "leaf_count": original_leaf_count,
+        "leaf_used_count": len(leaves),
+        "leaf_satisfied": satisfied,
+        "coverage_percent": round(cov, 2),
+        "weighted_quality_percent": round(weight_score, 2),
+    }
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Paper-style local judge evaluation for CodeWikiBench docs")
+    ap.add_argument("--judge_model", required=True, help="HF name or local path for judge model")
+    ap.add_argument("--docs_root", default="outputs/docs")
+    ap.add_argument("--output_csv", default="outputs/results/cwbench_paper_style_judge.csv")
+    ap.add_argument("--split", default="train")
+    ap.add_argument("--model_keys", default="CodeLlama,DeepSeekCoder,Mistral,Qwen")
+    ap.add_argument("--repos", default=",".join(DEFAULT_PAPER_REPOS))
+    ap.add_argument("--max_doc_chars", type=int, default=12000)
+    ap.add_argument("--max_leaves", type=int, default=80, help="cap leaf requirements per repo for practical runtime")
+    ap.add_argument("--progress_every", type=int, default=20)
+    ap.add_argument("--offline", action="store_true")
+    args = ap.parse_args()
+
+    if args.offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
+
+    docs_root = Path(args.docs_root)
+    output_csv = Path(args.output_csv)
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    ds = load_dataset("anhnh2002/codewikibench", split=args.split)
+    selected_repos = [r.strip() for r in args.repos.split(",") if r.strip()]
+    model_keys = [m.strip() for m in args.model_keys.split(",") if m.strip()]
+
+    tok = AutoTokenizer.from_pretrained(args.judge_model, use_fast=True, trust_remote_code=True)
+    dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+    model = AutoModelForCausalLM.from_pretrained(
+        args.judge_model,
+        device_map="auto",
+        torch_dtype=dtype,
+        trust_remote_code=True,
+    )
+    if tok.pad_token is None and tok.eos_token is not None:
+        tok.pad_token = tok.eos_token
+
+    rows: list[dict[str, Any]] = []
+    for mk in model_keys:
+        doc_dir = docs_root / MODEL_DOC_DIR.get(mk, mk)
+        model_name = MODEL_HF_NAME.get(mk, mk)
+        for repo_name in selected_repos:
+            row = {
+                "model_key": mk,
+                "model_name": model_name,
+                "repo_name": repo_name,
+                "commit_id": "",
+                "doc_path": str(doc_dir / f"{repo_name}.md"),
+                "leaf_count": 0,
+                "leaf_satisfied": 0,
+                "coverage_percent": 0.0,
+                "weighted_quality_percent": 0.0,
+                "notes": "",
+            }
+            repo_row = find_dataset_row(ds, repo_name)
+            if repo_row is None:
+                row["notes"] = "repo_not_found_in_dataset"
+                rows.append(row)
+                continue
+            row["commit_id"] = str(repo_row.get("commit_id", ""))
+
+            doc_path = Path(row["doc_path"])
+            if not doc_path.exists():
+                row["notes"] = "doc_missing"
+                rows.append(row)
+                continue
+            try:
+                s = eval_one_doc(
+                    model=model,
+                    tok=tok,
+                    repo_row=repo_row,
+                    doc_path=doc_path,
+                    max_doc_chars=args.max_doc_chars,
+                    max_leaves=args.max_leaves,
+                    progress_every=args.progress_every,
+                )
+                row.update(s)
+            except Exception as e:
+                row["notes"] = f"judge_error: {type(e).__name__}: {e}"
+            rows.append(row)
+            print(f"[done] {mk} | {repo_name} | quality={row['weighted_quality_percent']} cov={row['coverage_percent']}")
+
+    fields = [
+        "model_key",
+        "model_name",
+        "repo_name",
+        "commit_id",
+        "doc_path",
+        "leaf_count",
+        "leaf_used_count",
+        "leaf_satisfied",
+        "coverage_percent",
+        "weighted_quality_percent",
+        "notes",
+    ]
+    with output_csv.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in fields})
+
+    # model-level summary
+    summary_csv = output_csv.with_name("cwbench_paper_style_judge_summary.csv")
+    by_model: dict[str, list[dict[str, Any]]] = {}
+    for r in rows:
+        by_model.setdefault(r["model_name"], []).append(r)
+    with summary_csv.open("w", encoding="utf-8", newline="") as f:
+        flds = [
+            "model_name",
+            "repos_target",
+            "repos_scored",
+            "mean_weighted_quality_percent",
+            "mean_coverage_percent",
+        ]
+        w = csv.DictWriter(f, fieldnames=flds)
+        w.writeheader()
+        for model_name, items in sorted(by_model.items()):
+            scored = [x for x in items if not x["notes"]]
+            def avg(key: str) -> float:
+                vals = [float(x[key]) for x in scored]
+                return sum(vals) / len(vals) if vals else 0.0
+            w.writerow(
+                {
+                    "model_name": model_name,
+                    "repos_target": len(items),
+                    "repos_scored": len(scored),
+                    "mean_weighted_quality_percent": round(avg("weighted_quality_percent"), 2),
+                    "mean_coverage_percent": round(avg("coverage_percent"), 2),
+                }
+            )
+
+    print(f"Wrote: {output_csv}")
+    print(f"Wrote: {summary_csv}")
+
+
+if __name__ == "__main__":
+    main()

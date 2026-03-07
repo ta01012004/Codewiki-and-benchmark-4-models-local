@@ -1,5 +1,6 @@
 backend: vllm
 output_dir: outputs
+pipeline_version: v1
 
 runtime:
   seed: 42
@@ -54,6 +55,17 @@ summarization:
   top_k_files: 36
   max_file_chars: 14000
   timeout_sec: 180
+
+summarization_v2:
+  top_k_files: 42
+  max_file_chars: 18000
+  timeout_sec: 180
+  chunk_chars: 1800
+  chunk_overlap: 240
+  max_chunks: 240
+  max_chunk_summaries: 72
+  max_submodules: 8
+  max_section_evidence: 8
 
 evaluation:
   sentence_transformer_model: sentence-transformers/all-MiniLM-L6-v2

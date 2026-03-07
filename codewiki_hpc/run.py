@@ -11,6 +11,7 @@ from typing import Any
 from .config import apply_cli_overrides, load_config, parse_model_list
 from .evaluation import (
     aggregate_model_matrix,
+    compute_quality_score,
     infer_primary_language,
     write_model_matrix_csv,
     write_repo_matrix_csv,
@@ -20,6 +21,7 @@ from .evaluation.rubric_eval import evaluate_rubrics, evaluate_rubrics_matrix
 from .inference import create_backend
 from .repo_manager import RepoManager
 from .summarizer import RepoSummarizer
+from .summarizer_v2 import RepoSummarizerV2
 from .utils.logging import setup_logging
 from .utils.text import read_text_safe
 
@@ -31,7 +33,10 @@ RESULT_COLUMNS = [
     "primary_language",
     "doc_path",
     "generation_time_sec",
+    "qa_pairs_count",
+    "qa_available",
     "qa_score",
+    "quality_score",
     "coverage_score",
     "hierarchy_alignment",
     "leaf_coverage",
@@ -51,11 +56,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="CodeWiki HPC generation + evaluation pipeline")
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--models", type=str, default=None, help="Comma-separated aliases")
+    parser.add_argument("--repos", type=str, default=None, help="Comma-separated repo_name filters")
     parser.add_argument("--split", type=str, default=None)
     parser.add_argument("--max_repos", type=int, default=None)
     parser.add_argument("--backend", type=str, default=None, choices=["vllm", "transformers"])
     parser.add_argument("--gpus", type=int, default=None)
     parser.add_argument("--output_dir", type=str, default=None)
+    parser.add_argument("--pipeline_version", type=str, default=None, choices=["v1", "v2"])
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--deterministic", action="store_true")
@@ -93,6 +100,25 @@ def _sample_shard(samples: list[Any], array_idx: int | None, array_total: int | 
     if array_total <= 0:
         return samples
     return [s for s in samples if (s.idx % array_total) == array_idx]
+
+
+def _parse_repo_filters(repo_arg: str | None) -> list[str]:
+    if not repo_arg:
+        return []
+    return [item.strip() for item in repo_arg.split(",") if item.strip()]
+
+
+def _filter_samples_by_repo(samples: list[Any], repo_filters: list[str], logger: Any) -> list[Any]:
+    if not repo_filters:
+        return samples
+    wanted = {name.lower(): name for name in repo_filters}
+    filtered = [sample for sample in samples if sample.repo_name.lower() in wanted]
+    found = {sample.repo_name.lower() for sample in filtered}
+    missing = [name for name in repo_filters if name.lower() not in found]
+    logger.info(f"Repo filter requested={len(repo_filters)} matched={len(filtered)}")
+    if missing:
+        logger.warning(f"Repo filters not found in loaded split: {missing}")
+    return filtered
 
 
 def _load_existing_keys(csv_path: Path) -> set[str]:
@@ -146,13 +172,26 @@ def _dedupe_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [latest_by_key[k] for k in order]
 
 
-def _model_csv_name(model_cfg: dict[str, Any], fallback_key: str) -> str:
+def _pipeline_suffix(pipeline_version: str) -> str:
+    return "_V2" if pipeline_version == "v2" else ""
+
+
+def _results_dir(output_dir: Path, pipeline_version: str) -> Path:
+    return output_dir / ("results_v2" if pipeline_version == "v2" else "results")
+
+
+def _cache_dir(output_dir: Path, pipeline_version: str) -> Path:
+    return output_dir / ("cache_v2" if pipeline_version == "v2" else "cache")
+
+
+def _model_csv_name(model_cfg: dict[str, Any], fallback_key: str, pipeline_version: str) -> str:
     name = model_cfg.get("output_name") or model_cfg.get("model_name", fallback_key).split("/")[-1]
-    return f"cwbench_{name}.csv"
+    return f"cwbench_{name}{_pipeline_suffix(pipeline_version)}.csv"
 
 
-def _default_doc_path(output_dir: Path, model_key: str, repo_name: str) -> Path:
-    return output_dir / "docs" / model_key / f"{repo_name}.md"
+def _default_doc_path(output_dir: Path, model_key: str, repo_name: str, pipeline_version: str) -> Path:
+    docs_dir_name = "docs_v2" if pipeline_version == "v2" else "docs"
+    return output_dir / docs_dir_name / model_key / f"{repo_name}.md"
 
 
 def main() -> None:
@@ -161,8 +200,14 @@ def main() -> None:
 
     output_dir = Path(cfg.get("output_dir", "outputs"))
     output_dir.mkdir(parents=True, exist_ok=True)
+    pipeline_version = str(cfg.get("pipeline_version", "v1")).lower().strip()
+    if pipeline_version not in {"v1", "v2"}:
+        raise ValueError(f"Unsupported pipeline_version={pipeline_version}. Expected 'v1' or 'v2'.")
+    results_dir = _results_dir(output_dir, pipeline_version)
+    context_cache_dir = _cache_dir(output_dir, pipeline_version)
 
     logger = setup_logging(output_dir, run_name="codewiki_hpc")
+    logger.info(f"Pipeline version: {pipeline_version}")
 
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
@@ -197,6 +242,8 @@ def main() -> None:
     from .dataset import load_codewikibench
 
     samples = load_codewikibench(split=split, max_repos=max_repos, verbose_warnings=True)
+    repo_filters = _parse_repo_filters(args.repos)
+    samples = _filter_samples_by_repo(samples, repo_filters, logger)
     samples = _sample_shard(samples, array_idx=array_idx, array_total=array_total)
     logger.info(f"Total samples after sharding: {len(samples)}")
 
@@ -204,7 +251,7 @@ def main() -> None:
     logger.info(f"Selected models: {selected_model_keys}")
 
     repo_manager = RepoManager(cache_dir=output_dir / "cache", cfg=cfg, logger=logger)
-    summarizer = RepoSummarizer(cfg=cfg, logger=logger)
+    summarizer = RepoSummarizerV2(cfg=cfg, logger=logger) if pipeline_version == "v2" else RepoSummarizer(cfg=cfg, logger=logger)
     if offline:
         repo_cache_dir = output_dir / "cache" / "repos"
         cached_repo_count = len(list(repo_cache_dir.glob("*"))) if repo_cache_dir.exists() else 0
@@ -227,8 +274,8 @@ def main() -> None:
         if model_root:
             model_cfg["model_root"] = model_root
         model_name = model_cfg["model_name"]
-        csv_name = _model_csv_name(model_cfg, model_key)
-        csv_path = output_dir / "results" / csv_name
+        csv_name = _model_csv_name(model_cfg, model_key, pipeline_version)
+        csv_path = results_dir / csv_name
 
         model_rows: list[dict[str, Any]] = []
         if args.resume and csv_path.exists():
@@ -256,7 +303,10 @@ def main() -> None:
                         "primary_language": infer_primary_language(sample.docs_tree, sample.structured_docs),
                         "doc_path": "",
                         "generation_time_sec": 0.0,
+                        "qa_pairs_count": len(sample.qa_pairs or []),
+                        "qa_available": 1 if len(sample.qa_pairs or []) > 0 else 0,
                         "qa_score": 0.0,
+                        "quality_score": 0.0,
                         "coverage_score": 0.0,
                         "hierarchy_alignment": 0.0,
                         "leaf_coverage": 0.0,
@@ -288,7 +338,10 @@ def main() -> None:
                 "primary_language": infer_primary_language(sample.docs_tree, sample.structured_docs),
                 "doc_path": "",
                 "generation_time_sec": 0.0,
+                "qa_pairs_count": len(sample.qa_pairs or []),
+                "qa_available": 1 if len(sample.qa_pairs or []) > 0 else 0,
                 "qa_score": 0.0,
+                "quality_score": 0.0,
                 "coverage_score": 0.0,
                 "hierarchy_alignment": 0.0,
                 "leaf_coverage": 0.0,
@@ -307,13 +360,13 @@ def main() -> None:
 
             try:
                 if args.eval_only:
-                    doc_path = _default_doc_path(output_dir, model_key, sample.repo_name)
+                    doc_path = _default_doc_path(output_dir, model_key, sample.repo_name, pipeline_version)
                     row["doc_path"] = str(doc_path)
                 else:
                     repo_path = repo_manager.prepare_repo(sample, timeout_sec=clone_timeout)
                     ctx = repo_manager.build_context(sample, repo_path)
 
-                    context_json = output_dir / "cache" / sample.repo_name / "context.json"
+                    context_json = context_cache_dir / sample.repo_name / "context.json"
                     if not context_json.exists():
                         repo_manager.dump_context_json(ctx, context_json)
 
@@ -363,6 +416,8 @@ def main() -> None:
                 row["key_term_coverage"] = round(float(matrix_result.key_term_coverage), 6)
                 row["leaf_items_hit"] = int(matrix_result.leaf_items_hit)
                 row["leaf_items_total"] = int(matrix_result.leaf_items_total)
+
+                row["quality_score"] = round(compute_quality_score(row), 6)
                 notes.append(f"matrix: {matrix_result.notes}")
 
             except Exception as e:
@@ -398,16 +453,16 @@ def main() -> None:
         _write_results(csv_path, model_rows)
         all_rows.extend(model_rows)
 
-    all_csv = output_dir / "results" / "cwbench_all_models.csv"
+    all_csv = results_dir / f"cwbench_all_models{_pipeline_suffix(pipeline_version)}.csv"
     _write_results(all_csv, all_rows)
     logger.info(f"Wrote aggregate results to {all_csv}")
 
-    repo_matrix_csv = output_dir / "results" / "cwbench_matrix_repo.csv"
+    repo_matrix_csv = results_dir / f"cwbench_matrix_repo{_pipeline_suffix(pipeline_version)}.csv"
     write_repo_matrix_csv(repo_matrix_csv, all_rows)
     logger.info(f"Wrote repo-level evaluation matrix to {repo_matrix_csv}")
 
     model_matrix_rows = aggregate_model_matrix(all_rows)
-    model_matrix_csv = output_dir / "results" / "cwbench_matrix_model.csv"
+    model_matrix_csv = results_dir / f"cwbench_matrix_model{_pipeline_suffix(pipeline_version)}.csv"
     write_model_matrix_csv(model_matrix_csv, model_matrix_rows)
     logger.info(f"Wrote model-level evaluation matrix to {model_matrix_csv}")
 

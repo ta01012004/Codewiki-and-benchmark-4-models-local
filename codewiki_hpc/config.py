@@ -61,6 +61,8 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
 def apply_cli_overrides(config: dict[str, Any], args: Any) -> dict[str, Any]:
     cfg = copy.deepcopy(config)
 
+    if getattr(args, "pipeline_version", None):
+        cfg["pipeline_version"] = str(args.pipeline_version)
     if getattr(args, "backend", None):
         cfg["backend"] = args.backend
     if getattr(args, "split", None):
