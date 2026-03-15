@@ -61,7 +61,7 @@ class HFTransformersBackend(InferenceBackend):
             dtype = getattr(torch, torch_dtype)
 
         device_map = model_cfg.get("device_map", "auto")
-        self.max_input_tokens = int(model_cfg.get("max_input_tokens", 3072))
+        self.max_input_tokens = int(model_cfg.get("max_input_tokens", 4096))
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_source,

@@ -50,7 +50,33 @@ SECTION_SPECS = [
 ]
 
 
+def _is_noise_path(path: str) -> bool:
+    tokens = set(normalize_text(path).split())
+    return bool(
+        tokens.intersection(
+            {
+                "test",
+                "tests",
+                "spec",
+                "specs",
+                "fixture",
+                "fixtures",
+                "mock",
+                "mocks",
+                "example",
+                "examples",
+                "patch",
+                "patches",
+                "benchmark",
+                "benchmarks",
+            }
+        )
+    )
+
+
 class RepoSummarizerV2:
+    CACHE_VERSION = 4
+
     def __init__(self, cfg: dict[str, Any], logger: Any):
         self.cfg = cfg
         self.logger = logger
@@ -162,7 +188,14 @@ class RepoSummarizerV2:
                 match = next((item for item in ctx.files if item["path"] == path), None)
                 if match:
                     chosen[path] = match
-        return list(chosen.values())[: self.top_k_files + 16]
+        ranked = sorted(
+            chosen.values(),
+            key=lambda item: (_is_noise_path(item["path"]), item["path"]),
+        )
+        non_noise = [item for item in ranked if not _is_noise_path(item["path"])]
+        noise = [item for item in ranked if _is_noise_path(item["path"])]
+        limit = self.top_k_files + 16
+        return (non_noise + noise[: max(4, limit // 6)])[:limit]
 
     def _build_chunk_manifest(self, ctx: RepoContext, ir: dict[str, Any]) -> list[dict[str, Any]]:
         docs_paths = {item["path"] for item in ctx.docs_files}
@@ -189,6 +222,8 @@ class RepoSummarizerV2:
                     base_score += 2.5
                 if item["path"] in (ctx.module_map.get("configs", []) or []):
                     base_score += 2.0
+                if _is_noise_path(item["path"]):
+                    base_score -= 3.5
                 chunk["community_id"] = path_to_community.get(item["path"])
                 chunk["score"] = round(base_score, 4)
                 manifest.append(chunk)
@@ -257,6 +292,10 @@ class RepoSummarizerV2:
             token in path.lower() for token in ["plugin", "hook", "interface", "extension", "registry"]
         ):
             score += 4.0
+        if _is_noise_path(path) and section_name not in {"How to Run / Key Scripts"}:
+            score -= 4.0
+        if any(token in path.lower() for token in ["src/", "lib/", "core/", "server/", "cli/", "runtime/", "shell/"]):
+            score += 1.5
         return score
 
     @staticmethod
@@ -271,6 +310,104 @@ class RepoSummarizerV2:
         t = t.strip()
         return t[:max_len].rstrip() + ("..." if len(t) > max_len else "")
 
+    def _safe_summary_sentence(self, text: str, fallback: str, max_len: int = 220) -> str:
+        sentence = self._first_sentence(text, max_len=max_len)
+        lower = sentence.lower()
+        noisy_markers = [
+            "based on the provided evidence",
+            "subsystem summary",
+            "purpose:",
+            "the provided evidence",
+            "here is a summary",
+        ]
+        if any(marker in lower for marker in noisy_markers):
+            return fallback
+        return sentence
+
+    @staticmethod
+    def _is_bad_section_output(text: str) -> bool:
+        if not text or not text.strip():
+            return True
+        lower = text.lower()
+        if lower.count('"path"') >= 2 or lower.count('"kind"') >= 2 or lower.count('"importance"') >= 2:
+            return True
+        if text.count("{") >= 4 and text.count("}") >= 4:
+            return True
+        if lower.startswith('"') or lower.startswith("{") or lower.startswith("["):
+            return True
+        return False
+
+    @staticmethod
+    def _is_bad_repo_doc(text: str) -> bool:
+        if not text or not text.strip():
+            return True
+        lower = text.lower()
+        if lower.count('"path"') >= 4 or lower.count('"kind"') >= 4 or lower.count('"importance"') >= 4:
+            return True
+        if lower.count("## community_") >= 2:
+            return True
+        if text.count("{") >= 10 and text.count("}") >= 10:
+            return True
+        return False
+
+    def _build_section_fallback(
+        self,
+        section_name: str,
+        ctx: RepoContext,
+        ir: dict[str, Any],
+        evidence_pack: list[dict[str, Any]],
+        submodule_summaries: dict[str, str],
+    ) -> str:
+        top_evidence = [item["file_path"] for item in evidence_pack[:6]]
+        if section_name == "Overview":
+            communities = [c.get("label", "unknown") for c in ir.get("communities", [])[:5]]
+            return (
+                f"`{ctx.sample.repo_name}` is organized around {len(ir.get('communities', []))} detected subsystems. "
+                f"The most prominent areas are {', '.join(communities) if communities else 'core modules'}; "
+                f"primary evidence comes from {', '.join(top_evidence) if top_evidence else 'high-centrality files'}."
+            )
+        if section_name == "Architecture":
+            lines = []
+            for community in ir.get("communities", [])[:5]:
+                label = community.get("label", community.get("community_id", "community"))
+                paths = ", ".join(community.get("top_paths", [])[:3])
+                lines.append(f"- `{label}`: centered on {paths or 'internal members'}")
+            interactions = [
+                f"- `{edge.get('source_community')}` -> `{edge.get('target_community')}`"
+                for edge in ir.get("top_cross_community_interactions", [])[:5]
+            ]
+            return "\n".join(lines + ["", "Key subsystem interactions:"] + (interactions or ["- No strong cross-community edges detected."]))
+        if section_name == "Data Flow / Execution Flow":
+            entrypoints = ", ".join(ir.get("entrypoints", [])[:8]) or "detected runtime entrypoints"
+            filtered = [path for path in top_evidence if not _is_noise_path(path)]
+            if filtered:
+                top_evidence = filtered
+            return (
+                f"Execution appears to begin in {entrypoints}. "
+                f"From there, control flows through the subsystems highlighted by {', '.join(top_evidence) if top_evidence else 'the architecture graph'}, "
+                "before reaching service integrations, build/runtime helpers, or external outputs."
+            )
+        if section_name == "Configuration & Dependencies":
+            builds = ", ".join(ir.get("build_files", [])[:8]) or "build files not clearly detected"
+            configs = ", ".join(ir.get("configs", [])[:8]) or "config files not clearly detected"
+            return f"- Build and dependency surfaces: {builds}\n- Configuration surfaces: {configs}\n- Supporting evidence: {', '.join(top_evidence) if top_evidence else 'n/a'}"
+        if section_name == "How to Run / Key Scripts":
+            entrypoints = ", ".join(ir.get("entrypoints", [])[:8]) or "entrypoints not clearly detected"
+            return f"- Entrypoints and scripts: {entrypoints}\n- Operational evidence: {', '.join(top_evidence) if top_evidence else 'n/a'}"
+        extension_lines = [
+            f"- `{community_id}`: {self._safe_summary_sentence(summary, 'Extension likely follows the subsystem boundary and its public interfaces.', max_len=140)}"
+            for community_id, summary in list(submodule_summaries.items())[:4]
+        ] or ["- Extension points were inferred from subsystem boundaries and high-centrality modules."]
+        return "\n".join(extension_lines)
+
+    def _should_force_deterministic_section(self, section_name: str) -> bool:
+        return section_name in {
+            "Architecture",
+            "Data Flow / Execution Flow",
+            "Configuration & Dependencies",
+            "How to Run / Key Scripts",
+        }
+
     def _build_fallback_doc(
         self,
         ctx: RepoContext,
@@ -284,10 +421,16 @@ class RepoSummarizerV2:
             f"- `{edge.get('source_community')}` -> `{edge.get('target_community')}` (weight={edge.get('weight')})"
             for edge in top_interactions
         ] or ["- Cross-community dependencies were weak or sparsely detected."]
-        top_submodules = [
-            f"- `{community_id}`: {self._first_sentence(summary)}"
-            for community_id, summary in list(submodule_summaries.items())[:8]
-        ] or ["- No subsystem summaries were available."]
+        top_submodules = []
+        for community in ir.get("communities", [])[:8]:
+            community_id = community.get("community_id", "community")
+            label = community.get("label", community_id)
+            paths = ", ".join(community.get("top_paths", [])[:3]) or "internal members"
+            fallback = f"{label} centers on {paths}"
+            summary = self._safe_summary_sentence(submodule_summaries.get(community_id, ""), fallback)
+            top_submodules.append(f"- `{label}`: {summary}")
+        if not top_submodules:
+            top_submodules = ["- No subsystem summaries were available."]
 
         run_items = [
             item.get("file_path", "unknown")
@@ -346,24 +489,34 @@ class RepoSummarizerV2:
         repo_cache_dir.mkdir(parents=True, exist_ok=True)
         model_cache_dir = repo_cache_dir / model_key
         model_cache_dir.mkdir(parents=True, exist_ok=True)
+        repo_meta_path = repo_cache_dir / "cache_meta.json"
+        model_meta_path = model_cache_dir / "cache_meta.json"
+
+        repo_meta = read_json(repo_meta_path)
+        model_meta = read_json(model_meta_path)
+        repo_resume = bool(resume and repo_meta.get("cache_version") == self.CACHE_VERSION)
+        model_resume = bool(resume and model_meta.get("cache_version") == self.CACHE_VERSION)
 
         ir_path = repo_cache_dir / "architecture_ir.json"
-        if resume and ir_path.exists():
+        if repo_resume and ir_path.exists():
             ir = read_json(ir_path)
         else:
             ir = build_architecture_ir(ctx)
+            ir["cache_version"] = self.CACHE_VERSION
             write_json(ir_path, ir)
+            write_json(repo_meta_path, {"cache_version": self.CACHE_VERSION})
 
         manifest_path = repo_cache_dir / "chunk_manifest.json"
         index_path = repo_cache_dir / "retrieval_index.json"
-        if resume and manifest_path.exists() and index_path.exists():
+        if repo_resume and manifest_path.exists() and index_path.exists():
             manifest = read_json(manifest_path).get("chunks", [])
             retrieval_index = read_json(index_path).get("chunks", [])
         else:
             manifest = self._build_chunk_manifest(ctx, ir)
             retrieval_index = self._build_retrieval_index(manifest)
-            write_json(manifest_path, {"chunks": manifest})
-            write_json(index_path, {"chunks": retrieval_index})
+            write_json(manifest_path, {"cache_version": self.CACHE_VERSION, "chunks": manifest})
+            write_json(index_path, {"cache_version": self.CACHE_VERSION, "chunks": retrieval_index})
+            write_json(repo_meta_path, {"cache_version": self.CACHE_VERSION})
 
         chunk_cache = JsonCache(model_cache_dir / "stage_a_chunk_summaries.json")
         submodule_cache = JsonCache(model_cache_dir / "stage_b_submodule_summaries.json")
@@ -385,7 +538,7 @@ class RepoSummarizerV2:
         )
         for idx, chunk in enumerate(selected_chunks, start=1):
             cached = chunk_cache.get(chunk["chunk_id"])
-            if resume and isinstance(cached, dict) and str(cached.get("summary", "")).strip():
+            if model_resume and isinstance(cached, dict) and str(cached.get("summary", "")).strip():
                 chunk_summaries[chunk["chunk_id"]] = cached
                 self.logger.info(f"[{ctx.sample.repo_name}] V2 stage A {idx}/{total_chunks} cache-hit: {chunk['chunk_id']}")
                 continue
@@ -427,7 +580,7 @@ class RepoSummarizerV2:
         for idx, community in enumerate(community_items, start=1):
             community_id = community["community_id"]
             cached = submodule_cache.get(community_id)
-            if resume and isinstance(cached, str) and cached.strip():
+            if model_resume and isinstance(cached, str) and cached.strip():
                 submodule_summaries[community_id] = cached
                 self.logger.info(f"[{ctx.sample.repo_name}] V2 stage B {idx}/{total_communities} cache-hit: {community_id}")
                 continue
@@ -465,7 +618,7 @@ class RepoSummarizerV2:
             cached_evidence = section_evidence_cache.get(section_name)
             cached_text = section_text_cache.get(section_name)
             if (
-                resume
+                model_resume
                 and isinstance(cached_evidence, list)
                 and cached_evidence
                 and isinstance(cached_text, str)
@@ -507,28 +660,50 @@ class RepoSummarizerV2:
             section_evidence_cache.set(section_name, evidence_pack)
             section_evidence_cache.save()
 
-            ir_excerpt = compact_ir_for_prompt(ir)
-            prompt = make_section_prompt_v2(
-                repo_name=ctx.sample.repo_name,
-                section_name=section_name,
-                section_goal=section_goal,
-                ir_excerpt=ir_excerpt,
-                evidence_pack=evidence_pack,
-                submodule_summaries=submodule_summaries,
-            )
-            section_params = GenerationParams(
-                max_new_tokens=max(192, min(512, params.max_new_tokens)),
-                temperature=params.temperature,
-                top_p=params.top_p,
-                timeout_sec=params.timeout_sec,
-            )
-            try:
-                section_body = backend.generate(SECTION_SYNTHESIS_SYSTEM_V2, prompt, section_params).strip()
-            except Exception as e:
-                section_body = f"[stage-c-v2-failed] {e}"
+            if self._should_force_deterministic_section(section_name):
+                section_body = self._build_section_fallback(
+                    section_name=section_name,
+                    ctx=ctx,
+                    ir=ir,
+                    evidence_pack=evidence_pack,
+                    submodule_summaries=submodule_summaries,
+                )
+            else:
+                ir_excerpt = compact_ir_for_prompt(ir)
+                prompt = make_section_prompt_v2(
+                    repo_name=ctx.sample.repo_name,
+                    section_name=section_name,
+                    section_goal=section_goal,
+                    ir_excerpt=ir_excerpt,
+                    evidence_pack=evidence_pack,
+                    submodule_summaries=submodule_summaries,
+                )
+                section_params = GenerationParams(
+                    max_new_tokens=max(192, min(512, params.max_new_tokens)),
+                    temperature=params.temperature,
+                    top_p=params.top_p,
+                    timeout_sec=params.timeout_sec,
+                )
+                try:
+                    section_body = backend.generate(SECTION_SYNTHESIS_SYSTEM_V2, prompt, section_params).strip()
+                except Exception as e:
+                    section_body = f"[stage-c-v2-failed] {e}"
+                if self._is_bad_section_output(section_body):
+                    self.logger.warning(
+                        f"[{ctx.sample.repo_name}] V2 stage C fallback for section={section_name}: low-quality/json-heavy output"
+                    )
+                    section_body = self._build_section_fallback(
+                        section_name=section_name,
+                        ctx=ctx,
+                        ir=ir,
+                        evidence_pack=evidence_pack,
+                        submodule_summaries=submodule_summaries,
+                    )
             section_texts[section_name] = section_body
             section_text_cache.set(section_name, section_body)
             section_text_cache.save()
+
+        write_json(model_meta_path, {"cache_version": self.CACHE_VERSION})
 
         mermaid = render_mermaid_from_ir(ir)
         doc_parts = []
@@ -553,6 +728,11 @@ class RepoSummarizerV2:
             doc_text = "\n\n".join(doc_parts).strip()
             if not architecture_inserted:
                 doc_text += f"\n\n## Architecture\n\n### Architecture Graph\n```mermaid\n{mermaid}\n```"
+            if self._is_bad_repo_doc(doc_text):
+                self.logger.warning(
+                    f"[{ctx.sample.repo_name}] V2 final doc rejected: copy-heavy/json-heavy output; using deterministic fallback."
+                )
+                doc_text = self._build_fallback_doc(ctx, ir, section_evidence, submodule_summaries)
 
         docs_dir = output_dir / "docs" / model_key
         docs_dir.mkdir(parents=True, exist_ok=True)

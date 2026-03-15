@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+
 from typing import Any
 
 
@@ -86,6 +87,19 @@ def make_section_prompt_v2(
     evidence_pack: list[dict[str, Any]],
     submodule_summaries: dict[str, str],
 ) -> str:
+    communities_blob = "\n".join(
+        [
+            f"- {community.get('label','unknown')} [{community.get('community_id','?')}]: "
+            f"members={community.get('member_count', 0)}; top_paths={', '.join(community.get('top_paths', [])[:4])}"
+            for community in ir_excerpt.get("communities", [])
+        ]
+    )
+    interactions_blob = "\n".join(
+        [
+            f"- {edge.get('source_community')} -> {edge.get('target_community')} (weight={edge.get('weight')})"
+            for edge in ir_excerpt.get("top_cross_community_interactions", [])
+        ]
+    )
     evidence_blob = "\n\n".join(
         [
             f"[{item.get('evidence_id','?')}] {item.get('file_path','unknown')} "
@@ -104,8 +118,14 @@ def make_section_prompt_v2(
         "- Ground every claim in the evidence pack or architecture IR.\n"
         "- Mention concrete modules/files when helpful.\n"
         "- Do not copy snippets verbatim.\n"
+        "- Do not echo JSON or key/value structures.\n"
         "- Output Markdown only for this section body, not the heading.\n\n"
-        f"Architecture IR excerpt:\n{json.dumps(ir_excerpt, ensure_ascii=False, indent=2)}\n\n"
+        f"Entrypoints: {', '.join(ir_excerpt.get('entrypoints', [])[:10])}\n"
+        f"Build files: {', '.join(ir_excerpt.get('build_files', [])[:10])}\n"
+        f"Config files: {', '.join(ir_excerpt.get('configs', [])[:10])}\n"
+        f"Docs anchors: {', '.join(ir_excerpt.get('docs_anchors', [])[:10])}\n\n"
+        f"Communities:\n{communities_blob}\n\n"
+        f"Top interactions:\n{interactions_blob}\n\n"
         f"Subsystem summaries:\n{submodules_blob}\n\n"
         f"Evidence pack:\n{evidence_blob}"
     )

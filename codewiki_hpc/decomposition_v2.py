@@ -19,6 +19,27 @@ def _path_tokens(path: str) -> list[str]:
     return [t for t in text.lower().split("/") if t]
 
 
+def _is_noise_path(path: str) -> bool:
+    tokens = set(_path_tokens(path))
+    noise = {
+        "test",
+        "tests",
+        "spec",
+        "specs",
+        "fixture",
+        "fixtures",
+        "mock",
+        "mocks",
+        "example",
+        "examples",
+        "patch",
+        "patches",
+        "benchmark",
+        "benchmarks",
+    }
+    return bool(tokens.intersection(noise))
+
+
 def _node_importance(path: str, fan_in: int, entrypoints: set[str], build_files: set[str], configs: set[str], docs: set[str]) -> float:
     score = 1.0 + min(float(fan_in), 25.0) * 0.5
     name = Path(path).name.lower()
@@ -34,6 +55,8 @@ def _node_importance(path: str, fan_in: int, entrypoints: set[str], build_files:
         score += 2.0
     if any(tok in path.lower() for tok in ["core", "engine", "service", "runtime", "pipeline", "plugin", "extension"]):
         score += 2.0
+    if _is_noise_path(path):
+        score -= 6.0
     return round(score, 4)
 
 
@@ -103,7 +126,10 @@ def _build_file_edges(ctx: RepoContext) -> tuple[list[dict[str, Any]], dict[str,
     for directory, members in dir_groups.items():
         if directory in {".", ""} or len(members) < 2:
             continue
-        ranked = sorted(members, key=lambda p: fan_in.get(p, 0), reverse=True)[:8]
+        ranked = sorted(
+            members,
+            key=lambda p: (_is_noise_path(p), -fan_in.get(p, 0), p),
+        )[:8]
         for i, src in enumerate(ranked):
             for dst in ranked[i + 1 :]:
                 add_edge(src, dst, "colocated", 1.0)
@@ -114,7 +140,10 @@ def _build_file_edges(ctx: RepoContext) -> tuple[list[dict[str, Any]], dict[str,
     for suffix, members in suffix_groups.items():
         if suffix not in {".py", ".js", ".ts", ".tsx", ".java", ".go", ".rs"}:
             continue
-        top_members = sorted(members, key=lambda p: fan_in.get(p, 0), reverse=True)[:6]
+        top_members = sorted(
+            members,
+            key=lambda p: (_is_noise_path(p), -fan_in.get(p, 0), p),
+        )[:6]
         for i, src in enumerate(top_members):
             for dst in top_members[i + 1 :]:
                 src_parts = src.split("/")[:-1]
@@ -246,7 +275,10 @@ def build_architecture_ir(ctx: RepoContext) -> dict[str, Any]:
     )
     for idx, (_, members) in enumerate(ranked_communities, start=1):
         members = sorted(members)
-        top_paths = sorted(members, key=lambda path: (-importance.get(path, 0.0), path))[:6]
+        top_paths = sorted(
+            members,
+            key=lambda path: (_is_noise_path(path), -importance.get(path, 0.0), path),
+        )[:6]
         common_prefix = _common_prefix(members)
         label = common_prefix or Path(top_paths[0]).parent.name or Path(top_paths[0]).name
         community_id = f"community_{idx:02d}"

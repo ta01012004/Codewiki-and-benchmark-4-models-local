@@ -41,6 +41,30 @@ class RepoManager:
         self.git_retries = int(repo_cfg.get("git_retries", 3))
         self.git_retry_backoff_sec = int(repo_cfg.get("git_retry_backoff_sec", 3))
 
+    @staticmethod
+    def _is_noise_path(path: str) -> bool:
+        tokens = set(re.split(r"[/._-]+", path.lower()))
+        return bool(
+            tokens.intersection(
+                {
+                    "test",
+                    "tests",
+                    "spec",
+                    "specs",
+                    "fixture",
+                    "fixtures",
+                    "mock",
+                    "mocks",
+                    "example",
+                    "examples",
+                    "patch",
+                    "patches",
+                    "benchmark",
+                    "benchmarks",
+                }
+            )
+        )
+
     def _run_git(self, args: list[str], cwd: Path | None = None, timeout: int = 300) -> None:
         cmd = ["git", *args]
         self.logger.info(f"git command: {' '.join(cmd)} (cwd={str(cwd) if cwd else '.'})")
@@ -310,11 +334,25 @@ class RepoManager:
             "index.ts",
             "__main__.py",
         }
-        out: list[str] = []
+        out: list[tuple[float, str]] = []
         for item in files:
-            if item["path"].split("/")[-1] in candidates:
-                out.append(item["path"])
-        return out
+            name = item["path"].split("/")[-1]
+            if name not in candidates:
+                continue
+            path = item["path"]
+            score = 1.0
+            if not self._is_noise_path(path):
+                score += 4.0
+            lowered = path.lower()
+            if lowered.startswith(("src/", "lib/", "app/", "server/", "cli/", "cmd/", "shell/")):
+                score += 3.0
+            if lowered.count("/") <= 2:
+                score += 2.0
+            if name in {"main.py", "__main__.py", "server.py"}:
+                score += 1.5
+            out.append((score, path))
+        out.sort(key=lambda x: (-x[0], x[1]))
+        return [path for _, path in out[:16]]
 
     def _detect_build_files(self, files: list[dict[str, Any]]) -> list[str]:
         markers = {
