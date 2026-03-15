@@ -8,3 +8,6 @@ Meaning:
 
 Source commit:
 - `5ead480`
+
+Additional baseline subset file:
+- `cwbench_paper_7repo_repo_matrix_pre_v2.csv`: exact 7 CodeWiki paper repos from the pre-V2 baseline (`OpenHands,svelte,puppeteer,ml-agents,logstash,wazuh,electron`).
