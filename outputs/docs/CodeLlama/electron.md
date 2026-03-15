@@ -1,110 +1,21 @@
 # Overview
 
-index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/api/command-line/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/context-bridge/context-bridge-mutability/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/cookie-app/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/default-
+`electron` is organized around 275 detected subsystems. The most prominent areas are shell, docs, README.md, lib, docs; primary evidence comes from script/release/notes/index.ts, script/release/notes/index.ts, npm/index.js, npm/index.js, script/release/notes/index.ts, script/release/notes/index.ts.
 
 ## Architecture
 
-/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/cr
+- `shell`: centered on shell/browser/api/electron_api_extensions.cc, shell/browser/api/electron_api_extensions.h, shell/browser/api/electron_api_service_worker_context.cc
+- `docs`: centered on docs/api/extensions-api.md, docs/api/extensions.md, docs/api/ipc-main-service-worker.md
+- `README.md`: centered on README.md, tsconfig.default_app.json, tsconfig.electron.json
+- `lib`: centered on lib/browser/api/service-worker-main.ts, lib/browser/api/content-tracing.ts, lib/browser/api/crash-reporter.ts
+- `docs`: centered on docs/README.md, docs/breaking-changes.md, docs/experimental.md
+
+Key subsystem interactions:
+- `community_06` -> `community_107`
+- `community_190` -> `community_47`
+- `community_107` -> `community_47`
+- `community_06` -> `community_106`
+- `community_06` -> `community_224`
 
 ### Architecture Graph
 
@@ -112,219 +23,34 @@ index.js",
 
 flowchart TD
   community_01[shell\nshell/browser/api/electron_api_extensions.cc, shell/browser/api/electron_api_extensions.h]
-  community_02[spec\nspec/fixtures/api/app-path/lib/index.js, spec/fixtures/api/electron-main-module/app/index.js]
-  community_03[docs\ndocs/api/extensions-api.md, docs/api/extensions.md]
-  community_04[patches\npatches/chromium/chore_defer_usb_service_getdevices_request_until_usb_service_is.patch, patches/chromium/custom_protocols_plzserviceworker.patch]
-  community_05[README.md\nREADME.md, tsconfig.default_app.json]
-  community_06[lib\nlib/browser/api/service-worker-main.ts, lib/browser/api/auto-updater.ts]
-  community_07[script\nscript/gen-filenames.ts, script/gen-hunspell-filenames.js]
-  community_08[lib\nscript/lib/util.py, script/lib/config.py]
+  community_02[docs\ndocs/api/extensions-api.md, docs/api/extensions.md]
+  community_03[README.md\nREADME.md, tsconfig.default_app.json]
+  community_04[lib\nlib/browser/api/service-worker-main.ts, lib/browser/api/content-tracing.ts]
+  community_05[docs\ndocs/README.md, docs/breaking-changes.md]
+  community_06[lib\nscript/lib/util.py, script/lib/config.py]
+  community_07[shell/browser/extensions\nshell/browser/extensions/electron_browser_context_keyed_service_factories.cc, shell/browser/extensions/electron_browser_context_keyed_service_factories.h]
+  community_08[shell/common/extensions/api\nshell/common/extensions/api/BUILD.gn, shell/common/extensions/api/_api_features.json]
 
 ```
 
 ## Data Flow / Execution Flow
 
-spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed
+Execution appears to begin in npm/index.js, script/release/notes/index.ts, spec/fixtures/api/app-path/lib/index.js, spec/fixtures/api/electron-main-module/app/index.js, spec/fixtures/auto-update/check-with-headers/index.js, spec/fixtures/auto-update/check/index.js, spec/fixtures/auto-update/initial/index.js, spec/fixtures/auto-update/update-json/index.js. From there, control flows through the subsystems highlighted by npm/index.js, npm/index.js, script/release/notes/index.ts, script/release/notes/index.ts, script/release/notes/index.ts, script/release/notes/index.ts, before reaching service integrations, build/runtime helpers, or external outputs.
 
 ## Configuration & Dependencies
 
-index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 8.0
-    },
-    {
-      "path": "spec/fixtures/api/command-line/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/context-bridge/context-bridge-mutability/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/cookie-app/package.json",
-      "kind": "config",
-      "importance": 7.0
-    },
-    {
-      "path": "spec/fixtures/api/default-
+- Build and dependency surfaces: default_app/package.json, npm/package.json, package.json, spec/fixtures/api/app-path/package.json, spec/fixtures/api/command-line/package.json, spec/fixtures/api/context-bridge/context-bridge-mutability/package.json, spec/fixtures/api/cookie-app/package.json, spec/fixtures/api/default-menu/package.json
+- Configuration surfaces: patches/config.json, spec/ts-smoke/tsconfig.json, tsconfig.default_app.json, tsconfig.electron.json, tsconfig.json, tsconfig.script.json, tsconfig.spec.json
+- Supporting evidence: package.json, package.json, package.json, package.json, default_app/package.json, npm/package.json
 
 ## How to Run / Key Scripts
 
-"spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/command-line/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/context-bridge/context-bridge-mutability/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/cookie-app/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/default-menu/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
+- Entrypoints and scripts: npm/index.js, script/release/notes/index.ts, spec/fixtures/api/app-path/lib/index.js, spec/fixtures/api/electron-main-module/app/index.js, spec/fixtures/auto-update/check-with-headers/index.js, spec/fixtures/auto-update/check/index.js, spec/fixtures/auto-update/initial/index.js, spec/fixtures/auto-update/update-json/index.js
+- Operational evidence: script/release/notes/index.ts, script/release/notes/index.ts, npm/index.js, npm/index.js, script/release/notes/index.ts, script/release/notes/index.ts
 
 ## Notable Design Choices / Extension Points
 
-": "spec/fixtures/api/app-path/lib/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/electron-main-module/app/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/api-browser-destroy/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/early-in-memory-session-create/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/in-memory-session-double-free/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/crash-cases/quit-on-crashed-event/index.js",
-      "kind": "entrypoint",
-      "importance": 10.0
-    },
-    {
-      "path": "spec/fixtures/api/command-line/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/context-bridge/context-bridge-mutability/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/cookie-app/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
-    {
-      "path": "spec/fixtures/api/default-menu/package.json",
-      "kind": "config",
-      "importance": 9.0
-    },
+- `community_01`: [stage-b-v2-failed] Generation timed out for model=meta-llama/CodeLlama-7b-Instruct-hf timeout=180s
+- `community_02`: [stage-b-v2-failed] Generation timed out for model=meta-llama/CodeLlama-7b-Instruct-hf timeout=180s
+- `community_03`: [stage-b-v2-failed] Generation timed out for model=meta-llama/CodeLlama-7b-Instruct-hf timeout=180s
+- `community_04`: [stage-b-v2-failed] Generation timed out for model=meta-llama/CodeLlama-7b-Instruct-hf timeout=180s

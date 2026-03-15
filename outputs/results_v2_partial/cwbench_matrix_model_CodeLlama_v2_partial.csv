@@ -1,0 +1,2 @@
+model_name,repos_total,repos_completed,completion_rate,mean_generation_time_sec,qa_available_rate,mean_qa_score,mean_quality_score,mean_coverage_score,mean_hierarchy_alignment,mean_leaf_coverage,mean_structural_fidelity,mean_factual_grounding,mean_actionability,mean_coherence,mean_required_sections_coverage,mean_key_term_coverage
+meta-llama/CodeLlama-7b-Instruct-hf,7,7,1.0,590.555571,0.0,0.0,0.820851,0.807529,0.914286,0.857143,0.67381,0.977976,0.5,0.852578,1.0,0.184524
