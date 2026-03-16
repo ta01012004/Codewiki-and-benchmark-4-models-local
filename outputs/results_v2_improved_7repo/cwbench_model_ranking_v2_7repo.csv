@@ -1,0 +1,5 @@
+rank,model_name,mean_quality_score,mean_coverage_score,mean_hierarchy_alignment,mean_leaf_coverage,mean_structural_fidelity,mean_factual_grounding,mean_actionability,mean_coherence
+1,Qwen/Qwen2.5-Coder-7B-Instruct,0.847154,0.807489,1.000000,1.000000,0.682857,0.805704,0.571428,0.827081
+2,mistralai/Mistral-7B-Instruct-v0.3,0.840438,0.788581,1.000000,1.000000,0.671905,0.972536,0.238095,0.826527
+3,meta-llama/CodeLlama-7b-Instruct-hf,0.820851,0.807529,0.914286,0.857143,0.673810,0.977976,0.500000,0.852578
+4,deepseek-ai/deepseek-coder-6.7b-instruct,0.820603,0.808555,0.914286,0.857143,0.691429,0.908921,0.571428,0.856564
