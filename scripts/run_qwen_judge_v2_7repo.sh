@@ -20,3 +20,5 @@ python codewiki/eval_codewikibench_local \
   --max_leaves 80 \
   --progress_every 20 \
   --offline
+
+python scripts/postprocess_qwen_judge_v2_7repo.py
